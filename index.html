@@ -1,0 +1,428 @@
+<html>
+<head>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/jquery-1.10.0.min.js"></script>
+	<script src="/three.min.js"></script>
+	<script src="/Detector.js"></script>
+	<script src="/stats.min.js"></script>
+	<script src="/dat.gui.min.js"></script>
+	<style type="text/css">
+		#container {
+			position: absolute;
+			left: 0px;
+			right: 0px;
+			bottom: 0px;
+			top: 0px;
+			background: black;
+		}
+		#stats {
+			left: 0px;
+			right: auto !important;
+		}
+		#animationName {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			left: 0;
+			background: rgba(0,0,0,0.5);
+			color: white;
+			font-weight: bold;
+			text-transform: uppercase;
+			font-size: 18px;
+			padding: 8px;
+			text-align: right;
+		}
+	</style>
+</head>
+<body>
+	<div id="container"></div>
+	<div id="animationName"></div>
+
+
+	<script>
+	  	var socket = io.connect('http://localhost');
+	  	var presets = {
+        };
+		// some constants for use by the diodome, these are mesh specific so if we change the mesh we have to go recalculate these
+		var DisplayConstants = {
+            MAX_LEDS: 96,
+            LED_WIDTH: 12,
+            LED_HEIGHT: 8
+		};
+
+		(function() {
+		  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+		                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+		  window.requestAnimationFrame = requestAnimationFrame;
+		})();
+
+		var Display = function() {
+			this.init();
+		};
+
+		Display.prototype = {
+			container: null,
+			stats: null,
+
+			camera:null,
+			scene:null,
+			renderer:null,
+			projector:null,
+			mesh:null,
+			light:null,
+
+			mouseX:0,
+			mouseY:0,
+			windowWidth:0,
+			windowHeight:0,
+
+			// mouse properties for drag rotation of dome
+			onMouseDownPosition: new THREE.Vector2(),
+			isMouseDown: false,
+			theta: 45,
+			onMouseDownTheta: 45,
+			phi: 60,
+			onMouseDownPhi: 60,
+			radius: 1200,
+
+
+			isPicking: false,
+
+			selected: [],
+
+			debugWindow: null,
+			dome: null,
+
+			// the animation being shown/edited right now
+			theAnim: null,
+			// the actual animation instance
+			currentAnim: null,
+
+			// the codemirror editor
+			codeEditor: null,
+
+			// camera views
+			views: [
+				{
+					left: 0,
+					bottom: 0,
+					width: 0.5,
+					height: 1,
+					background: new THREE.Color().setRGB( 0.1,0.1,0.1 ),
+					eye: [ 0, 700, 1000 ],
+					up: [ 1, 0, 0 ],
+					fov: 30,
+					updateCamera: function ( camera, scene, mouseX, mouseY ) {
+						var target = scene.position.clone();
+						target.add(new THREE.Vector3(0,100,0));
+						camera.lookAt( target );
+					}
+				}
+			],
+
+			init: function() {
+
+				this.leds = [];
+				// initialize
+				for (var i=0; i < DisplayConstants.MAX_LEDS; i++) {
+					this.leds.push(new THREE.Color(0));
+				}
+
+				this.initScene();
+				this.initStats();
+				this.addListeners();
+				// create the dome object to represent our dome and its leds
+
+				this.onWindowResize();
+				this.onUpdate();
+
+
+				var that = this;
+				socket.on('reconnect', function() {
+					that.updateServerSettings();
+				});
+				socket.on('update', function (data) {
+					// loop over data and update led info
+					for (var i=0; i < that.leds.length; i++) {
+						var index = i*3,
+							led = that.leds[i];
+						led.r = data[index]/254;
+						led.g = data[index+1]/254;
+						led.b = data[index+2]/254;
+					}
+				});
+
+				// initialize settings to nothing
+				this.settings = {};
+				// events for setting and updating gui state
+				socket.on('settings', function(data) {
+					that.initGUI(data);
+				});
+				socket.on('animation-change', function(animName) {
+					that.onAnimationChange(animName);
+				})
+			},
+			onAnimationChange: function(animName) {
+				$('#animationName').text(animName);
+			},
+			updateGUI: function() {
+				var gui = this.gui;
+				// Iterate over all controllers
+				for (var i in gui.__controllers) {
+					gui.__controllers[i].updateDisplay();
+				}
+			},
+			nextAnim: function() {
+				socket.emit('nextAnim');
+			},
+			updateServerSettings: function() {
+
+				// Iterate over all controllers
+				var gui = this.gui;
+				for (var i in gui.__controllers) {
+					var val = gui.__controllers[i].getValue();
+					if (gui.__controllers[i].__onChange) {
+						gui.__controllers[i].__onChange(val);	
+					}
+				}
+				for (var i in gui.__folders) {
+					var folder = gui.__folders[i];
+
+					for (var i in folder.__controllers) {
+						var val = folder.__controllers[i].getValue();
+						if (folder.__controllers[i].__onChange) {
+							folder.__controllers[i].__onChange(val);	
+						}
+					}
+				}
+			},
+			initGUI: function(settings) {
+				// store it for later reference
+				$.extend(true, this.settings, settings);
+
+				if (this.gui) {
+					// don't create the gui twice...just do an update
+					this.updateGUI();
+					return;
+				}
+
+				// setup gui
+				var gui = new dat.GUI({load:presets}),
+					c = null,
+					that = this;
+				this.gui = gui;
+
+				// loop over anims and create gui for them
+				var animsList = gui.addFolder('Animations');
+
+				gui.remember(settings.animations);
+
+				for(var animName in settings.animations) {
+					c = animsList.add(settings.animations, animName);
+					c.onChange(function(value) {
+						if (value) {
+							socket.emit('animation-activate', this.property);
+						} else {
+							socket.emit('animation-deactivate', this.property);
+						}
+					});
+				}
+
+				gui.remember(settings.animation);
+				gui.remember(settings.transition);
+
+				var animSettings = gui.addFolder('Animation Settings');
+				c = animSettings.add(settings.animation, 'durationMin', 3, 120);
+				c.onChange(function(value) {
+					socket.emit('settings', { animation: { durationMin: value } });
+				});
+				c = animSettings.add(settings.animation, 'durationMax', 3, 300);
+				c.onChange(function(value) {
+					socket.emit('settings', { animation: { durationMax: value } });
+					return value;
+				});
+
+
+				var transitionSettings = gui.addFolder('Transition Settings');
+				c = transitionSettings.add(settings.transition, 'durationMin', 0.5, 10);
+				c.onChange(function(value) {
+					socket.emit('settings', { transition: { durationMin: value } });
+					return value;
+				});
+				c = transitionSettings.add(settings.transition, 'durationMax', 0.5, 30);
+				c.onChange(function(value) {
+					socket.emit('settings', { transition: { durationMax: value } });
+					return value;
+				});
+
+				var colorBalance = gui.addFolder('Color Balance');
+				c = colorBalance.add(settings.colorBalance, 'red', 0, 1.0);
+				c.onChange(function(value) {
+					socket.emit('settings', { colorBalance: { red: value } });
+					return value;
+				});
+				c = colorBalance.add(settings.colorBalance, 'green', 0, 1.0);
+				c.onChange(function(value) {
+					socket.emit('settings', { colorBalance: { green: value } });
+					return value;
+				});
+				c = colorBalance.add(settings.colorBalance, 'blue', 0, 1.0);
+				c.onChange(function(value) {
+					socket.emit('settings', { colorBalance: { blue: value } });
+					return value;
+				});
+
+				c = gui.add(settings, 'speedFactor', 0.01, 3);
+				c.onChange(function(value) {
+					socket.emit('settings', { speedFactor: value });
+					return value;
+				});
+
+				gui.add(this, 'nextAnim');
+				// trigger updates on all values
+				this.updateServerSettings();
+
+				// hook up listener to fire reset index event after preset change
+				$('.dg .save-row select').on('change', function(ev) {
+					socket.emit('reset-index');
+				});
+			},
+
+            generateSprite: function() {
+
+                var canvas = document.createElement( 'canvas' );
+                canvas.width = 16;
+                canvas.height = 16;
+
+                var context = canvas.getContext( '2d' );
+                var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+                gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
+                gradient.addColorStop( 1, 'rgba(0,0,0,0)' );
+
+                context.fillStyle = gradient;
+                context.fillRect( 0, 0, canvas.width, canvas.height );
+
+                return canvas;
+            },
+
+			initScene: function() {
+
+				this.container = $( '#container' );
+                
+                var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+                camera.position.z = 1000;
+
+                var scene = new THREE.Scene();
+
+                var material = new THREE.SpriteMaterial( {
+                    map: new THREE.Texture( this.generateSprite() ),
+                    blending: THREE.AdditiveBlending
+                } );
+
+                for ( var i = 0; i < 1000; i++ ) {
+                    particle = new THREE.Sprite( material );
+
+                    particle.position.x = 0;
+                    particle.position.y = 0;
+                    particle.position.z = 0;
+                    
+                    scene.add( particle );
+                }
+
+                renderer = new THREE.CanvasRenderer();
+                renderer.setClearColor( 0x000040 );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+                this.renderer = renderer;
+                this.camera = camera;
+                this.scene = scene;
+                
+                this.container.append( renderer.domElement );
+			},
+			initStats: function() {
+				var stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				stats.domElement.style.right = '0px';
+				this.container.append( stats.domElement );
+				this.stats = stats;
+			},
+			addListeners: function() {
+				var container = this.container;
+				container.on( 'mousemove', $.proxy(this.onDocumentMouseMove,this) );
+				container.on( 'mousedown', $.proxy(this.onDocumentMouseDown,this) );
+				container.on( 'mouseup',  $.proxy(this.onDocumentMouseUp,this) );
+
+				$(window).on('resize', $.proxy(this.onWindowResize, this));
+			},
+			
+			onUpdate: function() {
+				if (this.mesh) {
+					this.mesh.children[0].geometry.colorsNeedUpdate = true;
+				}
+				this.render();
+				requestAnimationFrame($.proxy(this.onUpdate,this));
+			},
+
+			onWindowResize: function() {
+
+				if ( this.windowWidth != window.innerWidth || this.windowHeight != window.innerHeight ) {
+
+					this.windowWidth  = window.innerWidth;
+					this.windowHeight = window.innerHeight;
+
+					this.renderer.setSize ( this.windowWidth, this.windowHeight );
+
+				}
+			},
+			render: function() {
+				if (!this.mesh || !this.leds) {
+					return;
+				}
+
+				// update color values from current animation in memory
+				for (var i=0; i < this.leds.length; i++) {
+					// map from 
+					// look up led info object
+					var ledInfo = DomeConstants.LEDS[i];
+					this.setColorAt(ledInfo, this.leds[i]);
+				}
+				this.mesh.children[0].geometry.colorsNeedUpdate = true;
+
+				var view, camera, windowWidth = this.windowWidth, windowHeight = this.windowHeight, renderer = this.renderer;
+
+				for ( var ii = 0; ii < this.views.length; ++ii ) {
+
+					view = this.views[ii];
+					camera = view.camera;
+
+					view.updateCamera( camera, this.scene, this.mouseX, this.mouseY );
+
+					var left   = Math.floor( windowWidth  * view.left );
+					var bottom = Math.floor( windowHeight * view.bottom );
+					var width  = Math.floor( windowWidth  * view.width );
+					var height = Math.floor( windowHeight * view.height );
+					renderer.setViewport( left, bottom, width, height );
+					renderer.setScissor( left, bottom, width, height );
+					renderer.enableScissorTest ( true );
+					renderer.setClearColor( view.background );
+
+					camera.aspect = width / height;
+					camera.updateProjectionMatrix();
+
+					renderer.render( this.scene, camera );
+				}
+				this.stats.update();
+			}
+		};
+
+		if ( ! Detector.webgl ) {
+			Detector.addGetWebGLMessage();
+			// don't initialize editor or remove mask
+		} else {
+			// create editor and remove mask
+			var editor = new Display();
+		}
+	</script>
+</body>
+</html>

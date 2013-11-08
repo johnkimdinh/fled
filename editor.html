@@ -5,14 +5,13 @@
 	<script src="/Detector.js"></script>
 	<script src="/stats.min.js"></script>
 	<script src="/dat.gui.min.js"></script>
-    <script src="/paper-full.min.js"></script>
+	<script src="/paper-full.min.js"></script>
 	<style type="text/css">
 		#container {
 			position: absolute;
-			left: 50px;
-			right: 50px;
-			bottom: 50px;
-			top: 50px;
+			top: 0px;
+			left: 0px;
+			width: 30%;
 			background: black;
 		}
 		#animationName {
@@ -28,23 +27,23 @@
 			padding: 8px;
 			text-align: right;
 		}
-        #canvas {
-            width: 100%;
-            height: 100%;
-            background: black;
-        }
+		#canvas {
+			width: 100%;
+			height: 100%;
+			background: black;
+		}
 	</style>
 </head>
 <body>
 	<div id="container">
-        <canvas id="canvas"></canvas>
-    </div>
+		<canvas id="canvas"></canvas>
+	</div>
 	<div id="animationName"></div>
 
 	<script>
-	  	var socket = io.connect('http://localhost');
-	  	var presets = {
-        };
+		var socket = io.connect('http://localhost');
+		var presets = {
+		};
 		// some constants for use by the diodome, these are mesh specific so if we change the mesh we have to go recalculate these
 		var DisplayConstants = {
 			MAX_LEDS: 96
@@ -52,7 +51,7 @@
 
 		(function() {
 		  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-		                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+									  window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 		  window.requestAnimationFrame = requestAnimationFrame;
 		})();
 
@@ -80,10 +79,10 @@
 				this.leds = [];
 				// initialize
 				for (var i=0; i < DisplayConstants.MAX_LEDS; i++) {
-					this.leds.push({red: 1, green: 0, blue: 0, alpha: 1});
+					this.leds.push({red: 1, green: 0, blue: 0});
 				}
 
-                this.initScene();
+				this.initScene();
 				this.addListeners();
 				// create the dome object to represent our dome and its leds
 
@@ -244,37 +243,57 @@
 			initScene: function() {
 
 				this.container = $( '#container' );
-                this.canvas = $('#canvas');
+				this.canvas = $('#canvas');
 
-                paper.setup(this.canvas[0]);
+				paper.setup(this.canvas[0]);
 
-                this.createLEDS();
-                // SETUP Canvas
+				this.createLEDS();
+				// SETUP Canvas
 			},
-            createLEDS: function() {
-                // calculate width/height of canvas
-                var width = this.canvas.width();
-                var height = this.canvas.height();
+			createLEDS: function() {
+				// calculate width/height of canvas
+				var width = paper.view.size.width;
+				var height = paper.view.size.height;
 
-                // calculate offset to indent LEDs
-                var offsetX = Math.round((width / 12)/2);
-                var offsetY = Math.round((height / 8)/2);
-                var gapX = Math.round(width/12);
-                var gapY = Math.round(height/8);
-                var radius = Math.round(width / 12)/2;
+				// calculate offset to indent LEDs
+				var offsetX = Math.round((width / 12)/2);
+				var offsetY = Math.round((height / 8)/2);
+				var gapX = Math.round(width/12);
+				var gapY = Math.round(height/8);
+				var radius = (Math.round(width / 12)/2)*1.5;
 
-                this.ledObjects = [];
-                for (var i=0; i < this.leds.length; i++) {
-                    var x = i%12;
-                    var y = Math.floor(i/12);
-                    var posX = offsetX + (gapX*x);
-                    var posY = offsetY + (gapY*y);
-                    this.ledObjects.push(new paper.Path.Circle({
-                        center: [posX, posY],
-                        radius: radius
-                    }));
-                }
-            },
+				if (this.ledObjects) {
+					for (var i=0; i < this.ledObjects.length; i++) {
+						this.ledObjects[i].remove();
+					}
+				}
+
+				this.ledObjects = [];
+				for (var i=0; i < this.leds.length; i++) {
+					var x = i%12;
+					var y = Math.floor(i/12);
+					var posX = offsetX + (gapX*x);
+					var posY = offsetY + (gapY*y);
+
+					var led = new paper.Path.Circle({
+						center: [posX,posY],
+						radius: radius
+					});
+					led.fillColor = {
+						gradient: {
+							stops: [
+								{red: 0, green: 0, blue: 0},
+								{red: 0, green: 0, blue: 0}
+							],
+							radial: true
+						},
+						origin: led.position,
+						destination: led.bounds.rightCenter
+					};
+
+					this.ledObjects.push(led);
+				}
+			},
 			addListeners: function() {
 				var container = this.container;
 
@@ -293,7 +312,16 @@
 					this.windowWidth  = window.innerWidth;
 					this.windowHeight = window.innerHeight;
 
-                    // RESIZE CANVAS
+					// RESIZE CANVAS
+					var width = this.container.width();
+					var height = Math.round(width/1.5);
+					this.canvas.height(height);
+					this.canvas.attr('height', height);
+
+					paper.view.size.width = width;
+					paper.view.size.height = height;
+
+					this.createLEDS();
 				}
 			},
 
@@ -301,58 +329,19 @@
 				if (!this.leds) {
 					return;
 				}
-                var width = this.canvas.width();
-                var height = this.canvas.height();
-
-                var offsetX = Math.round((width / 12)/2);
-                var offsetY = Math.round((height / 8)/2);
-                var gapX = Math.round(width/12);
-                var gapY = Math.round(height/8);
-                var radius = Math.round(width / 12);
-                for (var i=0; i < this.leds.length; i++) {
-                	var circle = this.ledObjects[i];
-                    /*var x = i%12;
-                    var y = Math.floor(i/12);
-                    var posX = offsetX + (gapX*x);
-                    var posY = offsetY + (gapY*y);
-
-                    var circle = new paper.Path.Circle({
-                        center: [posX, posY],
-                        radius: 15
-                    });*/
-                    circle.fillColor = {
-                    	gradient: {
-                            stops: [
-                                this.leds[i],
-                                {red: 0, green: 0, blue: 0, alpha: 1}
-                            ],
-                            radial: true
-                        },
-                        origin: circle.position,
-                        destination: circle.bounds.rightCenter
-                    };
-                   // circle.fillColor = 'red';
-                }
-				/*// update color values from current animation in memory
 				for (var i=0; i < this.leds.length; i++) {
-                    this.ledObjects[i].fillColor = {
-                        gradient: {
-                            stops: [
-                                this.leds[i],
-                                {red: 0, green: 0, blue: 0, alpha: 0}
-                            ]
-                        }
-                    };
-                    this.ledObjects[i].fillColor = this.leds[i];
-				}*/
-                paper.view.draw();
+					var circle = this.ledObjects[i];
+					circle.fillColor.gradient.stops[0].color = this.leds[i];
+				}
+				
+				paper.view.draw();
 				
 			}
 		};
 
-        window.onload = function() {
+		window.onload = function() {
 		  var editor = new Display();
-        };
+		};
 	</script>
 </body>
 </html>
