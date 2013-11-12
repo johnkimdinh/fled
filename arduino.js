@@ -88,10 +88,24 @@ Arduino.prototype = {
 	init: function(options) {
 		// trigger connect code
 		this.options = options;
+		this.ledCount = options.ledCount;
 		this.connect();
 		this.headerBuffer = new Buffer(256);
 		this.headerBuffer.fill(255);
+		this.dataBuffer = new Buffer(this.ledCount*3);
 		this.sendCount = 0;
+
+		// the physical arrangement of the LEDs
+		this.ledMap = [
+			0,	15,	16,	31,	32,	47,	48,	63,	64,	79,	80,	95,
+			1,	14,	17,	30,	33,	46,	49,	62,	65,	78,	81,	94,
+			2,	13,	18,	29,	34,	45,	50,	61,	66,	77,	82,	93,
+			3,	12,	19,	28,	35,	44,	51,	60,	67,	76,	83,	92,
+			4,	11,	20,	27,	36,	43,	52,	59,	68,	75,	84,	91,
+			5,	10,	21,	26,	37,	42,	53,	58,	69,	74,	85,	90,
+			6,	9,	22,	25,	38,	41,	54,	57,	70,	73,	86,	89,
+			7,	8,	23,	24,	39,	40,	55,	56,	71,	72,	87,	88
+		];
 	},
 	send: function(buffer) {
 		if (!this.serialPort) {
@@ -100,6 +114,14 @@ Arduino.prototype = {
 		}
 		try {
 			var that = this;
+			// reorder buffer according to internal LED map
+			for (var i=0; i < this.ledCount; i++) {
+				var index = i*3;	
+				var realIndex = this.ledMap[i]*3;
+				this.dataBuffer[realIndex] = buffer[index];
+				this.dataBuffer[realIndex+1] = buffer[index+1];
+				this.dataBuffer[realIndex+2] = buffer[index+2];
+			}
 			//console.log('debug: Writing buffer : ' + buffer.toJSON());
 			this.serialPort.write(this.headerBuffer, function(err, results) {
 				if (err) {
@@ -112,7 +134,7 @@ Arduino.prototype = {
 			sendCountBuf[0] = this.sendCount % 255;
 			this.serialPort.write(sendCountBuf);
 
-			this.serialPort.write(buffer, function(err, results) {
+			this.serialPort.write(this.dataBuffer, function(err, results) {
 				if (err) {
 					console.log('error: failed to send data to arduino : ' + err);
 					that.serialPort = null;

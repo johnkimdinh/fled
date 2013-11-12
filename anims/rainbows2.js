@@ -34,7 +34,7 @@ return {
 			var x = i%display.cols,
 				y = Math.floor(i/display.cols);
 			c = Color();
-			var h = ((tweenedValues.hue) + (x/display.cols)*360)%360,
+			var h = ((tweenedValues.hue) + (y/display.rows)*360)%360,
 				s = 100,
 				l = 50;
 			c.hsl( h,s,l );

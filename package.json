@@ -6,10 +6,10 @@
     "serialport": "git://github.com/voodootikigod/node-serialport.git",
     "socket.io": "~0.9.16",
     "connect": "~2.8.4",
-    "three": "~0.58.9",
     "express": "~3.3.4",
     "async": "~0.2.9",
     "jquery": "~1.8.3",
-    "extend": "~1.2.1"
+    "extend": "~1.2.1",
+    "color": "git://github.com/harthur/color.git"
   }
 }

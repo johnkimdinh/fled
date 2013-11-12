@@ -17,13 +17,21 @@ SimpleFade.prototype = {
 		if (this.complete <= 0.5) {
 			for (i=0; i < oldValues.length; i++) {
 				cloned = oldValues[i].clone();
-				cloned.multiplyScalar(1-halfway); // just use our complete value (0-1 for complete)
+				var rgb = cloned.rgb();
+				rgb.r *= 1-halfway;
+				rgb.g *= 1-halfway;
+				rgb.b *= 1-halfway;
+				cloned.rgb(rgb); // just use our complete value (0-1 for complete)
 				outValues[i] = cloned;
 			}
 		} else {
 			for (i=0; i < newValues.length; i++) {
 				cloned = newValues[i].clone();
-				cloned.multiplyScalar(halfway); // just use our complete value (0-1 for complete)
+				var rgb = cloned.rgb();
+				rgb.r *= halfway;
+				rgb.g *= halfway;
+				rgb.b *= halfway;
+				cloned.rgb(rgb); // just use our complete value (0-1 for complete)
 				outValues[i] = cloned;
 			}
 		}

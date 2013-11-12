@@ -3,8 +3,8 @@
 // setting colors on the buffer array
 // this object should provide the same interfaces as the display.js on the animation editor
 
-var THREE = require('three'),
-	TWEEN = require('./tween');
+var TWEEN = require('./tween'),
+	Color = require('color');
 
 // Blend modes from http://www.venture-ware.com/kevin/coding/lets-learn-math-photoshop-blend-modes/
 // many thanks to Kevin Jensen!
@@ -96,6 +96,15 @@ var BlendModes = {
 BlendModes.add = BlendModes.linearDodge;
 
 var Display = function() {
+
+	var config = require('./display-config.json');
+
+	this.config = config;
+	this.rows = config.rows;
+	this.cols = config.cols;
+	this.ratio = this.cols/this.rows;
+	this.MAX_LEDS = this.rows*this.cols;
+
 	this.reset();
 };
 
@@ -159,22 +168,21 @@ Display.prototype = {
 			blendMode = 'normal';
 		}
 		var blendFunc = BlendModes[blendMode],
-			r = blendFunc(color.r, led.r),
-			g = blendFunc(color.g, led.g),
-			b = blendFunc(color.b, led.b),
-			c = new THREE.Color();
-		c.r = r;
-		c.g = g;
-		c.b = b;
+			rgb = color.rgb(),
+			ledRGB = led.rgb(),
+			r = blendFunc(rgb.r/255, ledRGB.r/255),
+			g = blendFunc(rgb.g/255, ledRGB.g/255),
+			b = blendFunc(rgb.b/255, ledRGB.b/255),
+			c = Color({r: r*255, g: g*255, b: b*255});
 		return c;
 	},
 	clear: function(color) {
 		var r = 0, g = 0, b = 0;
 		if (color) {
-			r = color.r, g = color.g, b = color.b;
+			r = color.red(), g = color.green(), b = color.blue();
 		}
 		for (var i=0; i < this.leds.length; ++i) {
-			this.leds[i].setRGB(r,g,b);
+			this.leds[i].rgb(r,g,b);
 		}
 	},
 	setColor: function(leds, color, blendMode) {
@@ -219,8 +227,10 @@ Display.prototype = {
 		
 		// initialise LED states to off
 		this.leds = [];
-		for (var i=0; i < Display.MAX_LEDS; i++) {
-			this.leds.push( new THREE.Color(0x0) );
+		for (var i=0; i < this.MAX_LEDS; i++) {
+			var c =  Color();
+			c.rgb(0,0,0);
+			this.leds.push(c);
 		}
 
 		TWEEN.removeAll();
@@ -230,7 +240,6 @@ Display.prototype = {
 };
 
 // map some shortcuts to make life easier
-Display.Color = THREE.Color;
-Display.MAX_LEDS = 96; //  (missing leds - for door)
+Display.Color = Color;
 
 module.exports = Display;
