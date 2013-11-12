@@ -1,3 +1,5 @@
 node_modules/
 .env
+arduino/.build
+build
 npm-debug.log
