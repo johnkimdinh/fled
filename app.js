@@ -13,15 +13,16 @@ var Arduino = require('./arduino'),
 	visualizer = null,
 	arduino = null;
 
-// setup endpoints
+// lets create the display object
+var display = new Display();
 
 // create a buffer to hold our RGB data for streaming to clients
-var buffer = new Buffer(Display.MAX_LEDS * 3);
+var buffer = new Buffer(display.MAX_LEDS * 3);
 buffer.fill(0);
 
 // pass in buffer to animator
-animator = new Animator(buffer);
-arduino = new Arduino({ledCount:Display.MAX_LEDS,animator:animator});
+animator = new Animator(buffer,display);
+arduino = new Arduino({ledCount:display.MAX_LEDS,animator:animator});
 visualizer = new Visualizer(animator);
 
 // setup loop for driving this thing

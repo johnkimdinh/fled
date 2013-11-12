@@ -2,10 +2,7 @@
 <head>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/jquery-1.10.0.min.js"></script>
-	<script src="/Detector.js"></script>
-	<script src="/stats.min.js"></script>
 	<script src="/dat.gui.min.js"></script>
-	<script src="/paper-full.min.js"></script>
 	<style type="text/css">
 		#container {
 			position: absolute;
@@ -44,10 +41,6 @@
 		var socket = io.connect('http://localhost');
 		var presets = {
 		};
-		// some constants for use by the diodome, these are mesh specific so if we change the mesh we have to go recalculate these
-		var DisplayConstants = {
-			MAX_LEDS: 96
-		};
 
 		(function() {
 		  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
@@ -62,9 +55,6 @@
 		Display.prototype = {
 			container: null,
 
-			windowWidth:0,
-			windowHeight:0,
-
 			display: null,
 			// the animation being shown/edited right now
 			theAnim: null,
@@ -77,16 +67,12 @@
 			init: function() {
 
 				this.leds = [];
-				// initialize
-				for (var i=0; i < DisplayConstants.MAX_LEDS; i++) {
-					this.leds.push({red: 1, green: 0, blue: 0});
-				}
 
 				this.initScene();
 				this.addListeners();
 				// create the dome object to represent our dome and its leds
 
-				this.onWindowResize();
+				this.resizeContainer();
 				this.onUpdate();
 
 
@@ -94,14 +80,17 @@
 				socket.on('reconnect', function() {
 					that.updateServerSettings();
 				});
+				socket.on('initDisplay', function(data) {
+					that.initDisplay(data);
+				});
 				socket.on('update', function (data) {
 					// loop over data and update led info
 					for (var i=0; i < that.leds.length; i++) {
 						var index = i*3,
 							led = that.leds[i];
-						led.red = data[index]/254;
-						led.green = data[index+1]/254;
-						led.blue = data[index+2]/254;
+						led.r = data[index];
+						led.g = data[index+1];
+						led.b = data[index+2];
 					}
 				});
 
@@ -114,6 +103,19 @@
 				socket.on('animation-change', function(animName) {
 					that.onAnimationChange(animName);
 				})
+			},
+			initDisplay: function(config) {
+				this.leds = [];
+				// initialize
+				this.LED_ROWS = config.rows;
+				this.LED_COLS = config.cols;
+				this.MAX_LEDS = this.LED_ROWS*this.LED_COLS;
+				this.ratio = config.cols/config.rows;
+
+				for (var i=0; i < this.MAX_LEDS; i++) {
+					this.leds.push({r: 0, g: 0, b: 0});
+				}
+				this.resizeContainer();
 			},
 			onAnimationChange: function(animName) {
 				$('#animationName').text(animName);
@@ -240,20 +242,37 @@
 					socket.emit('reset-index');
 				});
 			},
+			resizeContainer: function() {
+				var width = this.canvas.width();
+				var height = Math.round(width / 1.5);
+				this.canvas.height(height);
+				this.canvas.width(width);
+				this.canvas.attr('width', width);
+				this.canvas.attr('height', height);
+				// calculate spacing for LEDs
+				var ledW = width / this.LED_COLS;
+				var ledH = height / this.LED_ROWS;
+				this.ledSize = Math.min(ledW,ledH);
+				this.xOffset = (width - this.ledSize*this.LED_COLS)/2;
+				this.yOffset = (height - this.ledSize*this.LED_ROWS)/2;
+			},
+			onWindowResize: function() {
+				this.resizeContainer();
+				var width = this.canvas.width();
+				var height = this.canvas.height();
+
+				this.halfX = width / 2;
+				this.halfY = height / 2;
+			},
 			initScene: function() {
 
 				this.container = $( '#container' );
 				this.canvas = $('#canvas');
-
-				paper.setup(this.canvas[0]);
-
-				this.createLEDS();
-				// SETUP Canvas
 			},
 			createLEDS: function() {
 				// calculate width/height of canvas
-				var width = paper.view.size.width;
-				var height = paper.view.size.height;
+				var width = this.canvas.width();
+				var height = this.canvas.height();
 
 				// calculate offset to indent LEDs
 				var offsetX = Math.round((width / 12)/2);
@@ -305,37 +324,38 @@
 				requestAnimationFrame($.proxy(this.onUpdate,this));
 			},
 
-			onWindowResize: function() {
-
-				if ( this.windowWidth != window.innerWidth || this.windowHeight != window.innerHeight ) {
-
-					this.windowWidth  = window.innerWidth;
-					this.windowHeight = window.innerHeight;
-
-					// RESIZE CANVAS
-					var width = this.container.width();
-					var height = Math.round(width/1.5);
-					this.canvas.height(height);
-					this.canvas.attr('height', height);
-
-					paper.view.size.width = width;
-					paper.view.size.height = height;
-
-					this.createLEDS();
-				}
-			},
-
 			render: function() {
-				if (!this.leds) {
+				if (!this.leds || this.leds.length <= 0) {
 					return;
 				}
+
+				var canvas = this.canvas[0];
+				var ctx = canvas.getContext('2d');
+				ctx.globalCompositeOperation = 'screen';
+
+				// Use the identity matrix while clearing the canvas
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 				for (var i=0; i < this.leds.length; i++) {
-					var circle = this.ledObjects[i];
-					circle.fillColor.gradient.stops[0].color = this.leds[i];
-				}
-				
-				paper.view.draw();
-				
+					// figure out coordinates of this led
+					var ledX = i%this.LED_COLS,
+						ledY = Math.floor(i/this.LED_COLS),
+						x = this.xOffset + (ledX*this.ledSize) +this.ledSize/2,
+						y = this.yOffset + (ledY*this.ledSize) +this.ledSize/2;
+					var gradient = ctx.createRadialGradient(x,y,0, x,y,this.ledSize);
+
+					var col = this.leds[i];
+					var colString = "rgba(" + col.r + "," + col.g + "," + col.b + ",1)";
+					gradient.addColorStop(0, colString);
+					gradient.addColorStop(0.1, colString);
+					colString = "rgba(" + col.r + "," + col.g + "," + col.b + ",0)";
+					gradient.addColorStop(1, colString);
+					ctx.fillStyle = gradient;
+					ctx.beginPath();
+					ctx.arc(x,y,this.ledSize, 0, Math.PI*2, true); 
+					ctx.closePath();
+					ctx.fill();
+				}				
 			}
 		};
 

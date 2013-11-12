@@ -11,10 +11,10 @@ var Display = require('./display'),
 	$ = require('jquery'),
 	events = require('events'),
 	util = require('util'),
-	extend = require('extend'),
-	THREE = require('three');
+	Color = require('color'),
+	extend = require('extend');
 
-var Animator = function(ledBuffer, options) {
+var Animator = function(ledBuffer, display, options) {
 	options = options || {
 		transition: {
 			durationMin: 2,
@@ -47,13 +47,13 @@ var Animator = function(ledBuffer, options) {
 		},
 		speedFactor: 1
 	};
-	this.init(ledBuffer,options);
+	this.init(ledBuffer,display,options);
 };
 
 util.inherits(Animator,events.EventEmitter);
 
 extend(Animator.prototype, {
-	init: function(ledBuffer, options)  {
+	init: function(ledBuffer, display, options)  {
 		this.options = options;
 
 		// store reference to LED buffer for population later
@@ -65,30 +65,8 @@ extend(Animator.prototype, {
 
 		this.currentAnim = null;
 
-
-		// NOTE: this maps the animation led order to the physical LED order, tweak this if we end up with bad wiring order
-		// =================================================================================================================
-		// to reorder the above array use this code:
-		// var newOrder = [new LED winding order, can be retrieved from using the online editor picking mode]
-		// var ledMap = [];
-		// for (var i=0; i < newOrder.length; i++) { ledMap[newOrder[i]] = i }
-		
-
-		this.ledMap = [
-			0,	8,	16,	24,	32,	40,	48,	56,	64,	72,	80,	88,
-			1,	9,	17,	25,	33,	41,	49,	57,	65,	73,	81,	89,
-			2,	10,	18,	26,	34,	42,	50,	58,	66,	74,	82,	90,
-			3,	11,	19,	27,	35,	43,	51,	59,	67,	75,	83,	91,
-			4,	12,	20,	28,	36,	44,	52,	60,	68,	76,	84,	92,
-			5,	13,	21,	29,	37,	45,	53,	61,	69,	77,	85,	93,
-			6,	14,	22,	30,	38,	46,	54,	62,	70,	78,	86,	94,
-			7,	15,	23,	31,	39,	47,	55,	63,	71,	79,	87,	95
-		];
-		// =================================================================================================================
-
-
 		// read all animations and transitions and get them ready for usage
-		this.display = new Display();
+		this.display = display;
 		this.compileAnimations();
 		this.loadTransitions();
 
@@ -159,34 +137,26 @@ extend(Animator.prototype, {
 			leds = this.applyTransition(leds);
 		}
 
-		var index = 0, led = null, realIndex = 0;
+		var index = 0, led = null;
 		for (var i=0; i < leds.length; ++i) {
 			index = i*3;
-			realIndex = this.ledMap[i]*3;
 			led = leds[i];
 
 			// if we've been given color modifications (hue, saturation or lightness shift...)
 			// apply it here before we translate to buffer
 			if (this.filter) {
 				var c = led.clone();
-				c.offsetHSL(this.filter.h, this.filter.s, this.filter.l);
+				//c.offsetHSL(this.filter.h, this.filter.s, this.filter.l);
 				led = c;
 			}
 
-			led.r *= this.options.colorBalance.red;
-			led.g *= this.options.colorBalance.green;
-			led.b *= this.options.colorBalance.blue;
-
-			led.r = Math.min(1,led.r);
-			led.g = Math.min(1,led.g);
-			led.b = Math.min(1,led.b);
-			led.r = Math.max(0,led.r);
-			led.g = Math.max(0,led.g);
-			led.b = Math.max(0,led.b);
+			led.red(led.red()*this.options.colorBalance.red);
+			led.green(led.green()*this.options.colorBalance.green);
+			led.blue(led.blue()*this.options.colorBalance.blue);
 			
-			ledBuffer[realIndex] = led.r*254 & 255;
-			ledBuffer[realIndex+1] = led.g*254 & 255;
-			ledBuffer[realIndex+2] = led.b*254 & 255;
+			ledBuffer[index] = led.red();
+			ledBuffer[index+1] = led.green();
+			ledBuffer[index+2] = led.blue();
 		}
 
 		// TODO: if current anim doesn't provide touch implementation then apply touchData.filters here
@@ -205,7 +175,7 @@ extend(Animator.prototype, {
 		var oldValues = [];
 		for (var i=0; i < this.display.leds.length; i++) {
 			var led = this.display.leds[i];
-			oldValues.push(led.clone());
+			oldValues.push(Color(led.rgb()));
 		}
 		this.oldValues = oldValues;
 
@@ -282,7 +252,7 @@ extend(Animator.prototype, {
 
 		this.currentAnim = script.runInNewContext({
 			Display: Display,
-			THREE: THREE,
+			Color: Color,
 			TWEEN: TWEEN,
 			$: $,
 			console: console

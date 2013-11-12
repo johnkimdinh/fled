@@ -15,7 +15,7 @@ Visualizer.prototype = {
 			io = require('socket.io').listen(server);
 
 		this.animator = animator;
-		server.listen(80);
+		server.listen(8080);
 
 		app.use(express.static(path.join(__dirname, 'public')));
 		app.get('/', function (req, res) {
@@ -35,6 +35,8 @@ Visualizer.prototype = {
 		this.socket = null;
 		io.sockets.on('connection', function (socket) {
 			that.socket = socket;
+
+			socket.emit('initDisplay', animator.display.config);
 
 			socket.on('nextAnim', function() {
 				that.animator.next();
