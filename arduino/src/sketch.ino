@@ -2,7 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // how many leds in our string?
-static const int NUM_LEDS = 96;
+static const int NUM_LEDS = 10;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
@@ -70,19 +70,7 @@ void loop() {
     // update the strip
     strip.show();
   }*/
-  if (bufferReady) {
-    for(int i=0; i<NUM_LEDS; i++) {
-      int d = i*3;
-      uint32_t c = strip.Color(colorValues[d+1], colorValues[d], colorValues[d+2]);
-      strip.setPixelColor(i, c);
-    }
-    // update the strip
-    strip.show();
-    bufferReady = false;
-  }
-}
 
-void serialEvent() {
  while (Serial.available() > 0) {
    char c = Serial.read();
    colorValues[index++] = c;
@@ -93,4 +81,14 @@ void serialEvent() {
     break;
    }
  } 
+  if (bufferReady) {
+    for(int i=0; i<NUM_LEDS; i++) {
+      int d = i*3;
+      uint32_t c = strip.Color(colorValues[d+1], colorValues[d], colorValues[d+2]);
+      strip.setPixelColor(i, c);
+    }
+    // update the strip
+    strip.show();
+    bufferReady = false;
+  }
 }

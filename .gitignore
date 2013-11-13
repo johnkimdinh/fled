@@ -1,5 +1,7 @@
 node_modules/
 .env
 arduino/.build
+strandtest/.build
 build
+log
 npm-debug.log

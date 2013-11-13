@@ -31,7 +31,8 @@ Arduino.prototype = {
 
 			var port = null;
 			ports.forEach(function(p) {
-				if (p.manufacturer.indexOf('Arduino')!==-1) {
+				console.log('Port : ' + JSON.stringify(p));
+				if (p.manufacturer && p.manufacturer.indexOf('Arduino')!==-1) {
 					port = p.comName;
 				} else {
 					if (p.hasOwnProperty('pnpId')){
@@ -51,7 +52,7 @@ Arduino.prototype = {
 			}
 			// open the port
 			var serialPort = new SerialPort(port, {
-				baudrate: 250000,
+				baudrate: 115200,
 				parser: serialport.parsers.readline("\n") 
 			});
 			var oldNumber = 0;
@@ -92,7 +93,8 @@ Arduino.prototype = {
 		this.connect();
 		this.headerBuffer = new Buffer(256);
 		this.headerBuffer.fill(255);
-		this.dataBuffer = new Buffer(this.ledCount*3);
+		//this.dataBuffer = new Buffer(this.ledCount*3);
+		this.dataBuffer = new Buffer(10*3);	
 		this.sendCount = 0;
 
 		// the physical arrangement of the LEDs
@@ -109,21 +111,21 @@ Arduino.prototype = {
 	},
 	send: function(buffer) {
 		if (!this.serialPort) {
-		//	console.log('warn: no arduino port available for writing');
+			console.log('warn: no arduino port available for writing');
 			return;
 		}
 		try {
 			var that = this;
 			// reorder buffer according to internal LED map
-			for (var i=0; i < this.ledCount; i++) {
+			for (var i=0; i < this.ledCount && i < 10; i++) {
 				var index = i*3;	
 				var realIndex = this.ledMap[i]*3;
-				this.dataBuffer[realIndex] = buffer[index];
-				this.dataBuffer[realIndex+1] = buffer[index+1];
-				this.dataBuffer[realIndex+2] = buffer[index+2];
+				this.dataBuffer[realIndex] = Math.round((buffer[index]/255)*254);
+				this.dataBuffer[realIndex+1] = Math.round((buffer[index+1]/255)*254);
+				this.dataBuffer[realIndex+2] = Math.round((buffer[index+2]/255)*254);
 			}
-			//console.log('debug: Writing buffer : ' + buffer.toJSON());
-			this.serialPort.write(this.headerBuffer, function(err, results) {
+//			console.log('debug: Writing buffer : ' + buffer.toJSON());
+/*			this.serialPort.write(this.headerBuffer, function(err, results) {
 				if (err) {
 					console.log('error: failed to send data to arduino : ' + err);
 					that.serialPort = null;
@@ -133,7 +135,7 @@ Arduino.prototype = {
 			var sendCountBuf = new Buffer(1);
 			sendCountBuf[0] = this.sendCount % 255;
 			this.serialPort.write(sendCountBuf);
-
+*/
 			this.serialPort.write(this.dataBuffer, function(err, results) {
 				if (err) {
 					console.log('error: failed to send data to arduino : ' + err);
@@ -141,7 +143,7 @@ Arduino.prototype = {
 					that.setConnectTimeout();
 				}
 			});
-			//console.log('Sent:' + this.sendCount);
+//			console.log('Sent:' + this.sendCount);
 			this.sendCount++;
 		} catch(ex) {
 			console.log('Exception thrown while writing to serialport : ' + ex);
