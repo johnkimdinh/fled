@@ -1,6 +1,8 @@
+// include the neo pixel library
 #include <Adafruit_NeoPixel.h>
 
-#define PIN 6
+// how many leds in our string?
+static const int NUM_LEDS = 96;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
@@ -9,71 +11,86 @@
 //   NEO_GRB     Pixels are wired for GRB bitstream
 //   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
 //   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(96, PIN, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, 6, NEO_RGB + NEO_KHZ800);
+
+// buffer to hold colors of our LEDs
+char colorValues[NUM_LEDS*3];
+char buffer[NUM_LEDS*3];
+int index = 0;
+boolean bufferReady = true;
+boolean secondBuffer = false;
 
 void setup() {
   strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
-  color(strip.Color(128,128,128), 50);
+  strip.show();
+
+  // initialize to black (off)
+  for (int i=0; i < NUM_LEDS; i++) {
+    int d = i*3;
+    colorValues[d] = 255;
+    colorValues[d+1] = 0;
+    colorValues[d+2] = 255;
+    buffer[d] = 0;
+    buffer[d+1] = 0;
+    buffer[d+2] = 0;
+  }
+
+  // initialize the strip to the current values
+  for(int i=0; i<NUM_LEDS; i++) {
+    int d = i*3;
+    uint32_t c = strip.Color(colorValues[d], colorValues[d+1], colorValues[d+2]);
+    strip.setPixelColor(i, c);
+  }
+  // update the strip
+  strip.show();
+
+   //Initialize serial and wait for port to open:
+  Serial.begin(115200);
+  while (!Serial) {
+    ; // wait for port
+  }
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  rainbowCycle(20);
-}
-void color(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-  }
-  strip.show();
-  delay(wait);
-}
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-      strip.show();
-      delay(wait);
-  }
-}
-
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-
-  for(j=0; j<256; j++) {
-    for(i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel((i+j) & 255));
+  // wait for bytes on serial port
+  /*if (Serial.available() > 0) {
+    // read 3 bytes per LED from serial port
+    char bytesRead = Serial.readBytes(colorValues, NUM_LEDS*3);
+    // check we got a full complement of bytes
+    if (bytesRead < NUM_LEDS*3) {
+      // something went wrong, abandon this loop
+      return;
     }
-    strip.show();
-    delay(wait);
-  }
-}
-
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint8_t wait) {
-  uint16_t i, j;
-
-  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-    for(i=0; i< strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    // feed the data to the leds
+    for(int i=0; i<NUM_LEDS; i++) {
+      int d = i*3;
+      uint32_t c = strip.Color(colorValues[d+1], colorValues[d], colorValues[d+2]);
+      strip.setPixelColor(i, c);
     }
+    // update the strip
     strip.show();
-    delay(wait);
+  }*/
+  if (bufferReady) {
+    for(int i=0; i<NUM_LEDS; i++) {
+      int d = i*3;
+      uint32_t c = strip.Color(colorValues[d+1], colorValues[d], colorValues[d+2]);
+      strip.setPixelColor(i, c);
+    }
+    // update the strip
+    strip.show();
+    bufferReady = false;
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  if(WheelPos < 85) {
-   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-  } else if(WheelPos < 170) {
-   WheelPos -= 85;
-   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  } else {
-   WheelPos -= 170;
-   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
+void serialEvent() {
+ while (Serial.available() > 0) {
+   char c = Serial.read();
+   colorValues[index++] = c;
+   if (index >= NUM_LEDS*3) {
+    index = 0;
+   // set data!
+    bufferReady = true; 
+    break;
+   }
+ } 
 }
-
-
