@@ -93,8 +93,7 @@ Arduino.prototype = {
 		this.connect();
 		this.headerBuffer = new Buffer(256);
 		this.headerBuffer.fill(255);
-		//this.dataBuffer = new Buffer(this.ledCount*3);
-		this.dataBuffer = new Buffer(10*3);	
+		this.dataBuffer = new Buffer(this.ledCount*3);
 		this.sendCount = 0;
 
 		// the physical arrangement of the LEDs
@@ -117,7 +116,7 @@ Arduino.prototype = {
 		try {
 			var that = this;
 			// reorder buffer according to internal LED map
-			for (var i=0; i < this.ledCount && i < 10; i++) {
+			for (var i=0; i < this.ledCount; i++) {
 				var index = i*3;	
 				var realIndex = this.ledMap[i]*3;
 				this.dataBuffer[realIndex] = Math.round((buffer[index]/255)*254);
@@ -125,7 +124,7 @@ Arduino.prototype = {
 				this.dataBuffer[realIndex+2] = Math.round((buffer[index+2]/255)*254);
 			}
 //			console.log('debug: Writing buffer : ' + buffer.toJSON());
-/*			this.serialPort.write(this.headerBuffer, function(err, results) {
+			this.serialPort.write(this.headerBuffer, function(err, results) {
 				if (err) {
 					console.log('error: failed to send data to arduino : ' + err);
 					that.serialPort = null;
@@ -135,7 +134,7 @@ Arduino.prototype = {
 			var sendCountBuf = new Buffer(1);
 			sendCountBuf[0] = this.sendCount % 255;
 			this.serialPort.write(sendCountBuf);
-*/
+
 			this.serialPort.write(this.dataBuffer, function(err, results) {
 				if (err) {
 					console.log('error: failed to send data to arduino : ' + err);
