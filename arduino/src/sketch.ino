@@ -2,7 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // how many leds in our string?
-static const int NUM_LEDS = 10;
+static const int NUM_LEDS = 96;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
@@ -90,5 +90,7 @@ void loop() {
     // update the strip
     strip.show();
     bufferReady = false;
-  }
+    Serial.write(1);  
+
+ }
 }
