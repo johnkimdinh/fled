@@ -12,7 +12,7 @@ return {
 		}
 
       	display.tween(tweenedValues,{
-          to: {hue: 360},
+          to: {hue: 1},
           duration: 5000,
           repeat: Infinity,
           yoyo: true,
@@ -33,11 +33,11 @@ return {
 		for (var i=0; i < display.leds.length; i++) {
 			var x = i%display.cols,
 				y = Math.floor(i/display.cols);
-			c = Color();
-			var h = ((tweenedValues.hue) + (x/display.cols)*360)%360,
-				s = 100,
-				l = 50;
-			c.hsl( h,s,l );
+			c = new Color(0x0);
+			var h = ((tweenedValues.hue) + (x/display.cols))%1,
+				s = 1,
+				l = 0.5;
+			c.setHSL(h,s,l);
 			display.setColor(i, c);
 		}
 	}

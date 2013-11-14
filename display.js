@@ -4,7 +4,7 @@
 // this object should provide the same interfaces as the display.js on the animation editor
 
 var TWEEN = require('./tween'),
-	Color = require('color');
+	Color = require('./color');
 
 // Blend modes from http://www.venture-ware.com/kevin/coding/lets-learn-math-photoshop-blend-modes/
 // many thanks to Kevin Jensen!
@@ -168,21 +168,22 @@ Display.prototype = {
 			blendMode = 'normal';
 		}
 		var blendFunc = BlendModes[blendMode],
-			rgb = color.rgb(),
-			ledRGB = led.rgb(),
-			r = blendFunc(rgb.r/255, ledRGB.r/255),
-			g = blendFunc(rgb.g/255, ledRGB.g/255),
-			b = blendFunc(rgb.b/255, ledRGB.b/255),
-			c = Color({r: r*255, g: g*255, b: b*255});
+			r = blendFunc(color.r, led.r),
+			g = blendFunc(color.g, led.g),
+			b = blendFunc(color.b, led.b),
+			c = new Color();
+		c.r = r;
+		c.g = g;
+		c.b = b;
 		return c;
 	},
 	clear: function(color) {
 		var r = 0, g = 0, b = 0;
 		if (color) {
-			r = color.red(), g = color.green(), b = color.blue();
+			r = color.r, g = color.g, b = color.b;
 		}
 		for (var i=0; i < this.leds.length; ++i) {
-			this.leds[i].rgb(r,g,b);
+			this.leds[i].setRGB(r,g,b);
 		}
 	},
 	setColor: function(leds, color, blendMode) {
@@ -228,8 +229,7 @@ Display.prototype = {
 		// initialise LED states to off
 		this.leds = [];
 		for (var i=0; i < this.MAX_LEDS; i++) {
-			var c =  Color();
-			c.rgb(0,0,0);
+			var c =  new Color(0x0);
 			this.leds.push(c);
 		}
 

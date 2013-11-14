@@ -11,7 +11,7 @@ var Display = require('./display'),
 	$ = require('jquery'),
 	events = require('events'),
 	util = require('util'),
-	Color = require('color'),
+	Color = require('./color'),
 	extend = require('extend');
 
 var Animator = function(ledBuffer, display, options) {
@@ -146,17 +146,24 @@ extend(Animator.prototype, {
 			// apply it here before we translate to buffer
 			if (this.filter) {
 				var c = led.clone();
-				//c.offsetHSL(this.filter.h, this.filter.s, this.filter.l);
+				c.offsetHSL(this.filter.h, this.filter.s, this.filter.l);
 				led = c;
 			}
 
-			led.red(led.red()*this.options.colorBalance.red);
-			led.green(led.green()*this.options.colorBalance.green);
-			led.blue(led.blue()*this.options.colorBalance.blue);
+			led.r *= this.options.colorBalance.red;
+			led.g *= this.options.colorBalance.green;
+			led.b *= this.options.colorBalance.blue;
+
+			led.r = Math.min(1,led.r);
+			led.g = Math.min(1,led.g);
+			led.b = Math.min(1,led.b);
+			led.r = Math.max(0,led.r);
+			led.g = Math.max(0,led.g);
+			led.b = Math.max(0,led.b);
 			
-			ledBuffer[index] = led.red();
-			ledBuffer[index+1] = led.green();
-			ledBuffer[index+2] = led.blue();
+			ledBuffer[index] = led.r*255;
+			ledBuffer[index+1] = led.g*255;
+			ledBuffer[index+2] = led.b*255;
 		}
 
 		// TODO: if current anim doesn't provide touch implementation then apply touchData.filters here
@@ -175,7 +182,7 @@ extend(Animator.prototype, {
 		var oldValues = [];
 		for (var i=0; i < this.display.leds.length; i++) {
 			var led = this.display.leds[i];
-			oldValues.push(Color(led.rgb()));
+			oldValues.push(led.clone());
 		}
 		this.oldValues = oldValues;
 
