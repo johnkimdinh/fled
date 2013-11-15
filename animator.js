@@ -65,10 +65,6 @@ extend(Animator.prototype, {
 		// read all animations and transitions and get them ready for usage
 		this.display = display;
 		this.loadTransitions();
-		this.data = {};
-	},
-	setData: function(data) {
-		this.data = data;
 	},
 	loadTransitions: function() {
 		var transitionModules = fs.readdirSync('./transitions'),
@@ -93,14 +89,14 @@ extend(Animator.prototype, {
 		this.startTime = Date.now();
 		this.display.play();
 	},
-	update: function(time) {
+	update: function(time, data) {
 		var elapsed = Date.now() - this.startTime;
 		// update tweens and display state
 		this.display.update(this.startTime + (elapsed*this.options.speedFactor));
 
 		// update current animation
 		if (this.currentAnim) {
-			this.currentAnim.onUpdate(this.display,this.data,this);
+			this.currentAnim.onUpdate(this.display,data,this);
 		}
 
 		// copy led color values into buffer
@@ -206,14 +202,14 @@ extend(Animator.prototype, {
 		var idx = Math.floor(Math.random()*this.transitions.length);
 		return this.transitions[idx];
 	},
-	checkAnimationRequired: function(anim) {
+	checkAnimationRequired: function(anim, data) {
 		if (anim.required) {
 			var required = anim.required;
 			for (var i=0; i < required.length; i++) {
 				var requiredString = required[i];
 				// split into paths and check on data object
 				var paths = requiredString.split('.');
-				var obj = this.data;
+				var obj = data;
 				for (var j=0; j < paths.length; j++) {
 					if (typeof obj[paths[j]] === 'undefined') {
 						console.log('Animation rejected missing data : ' + requiredString);
@@ -227,9 +223,9 @@ extend(Animator.prototype, {
 
 		return true;
 	},
-	next: function(anim) {
+	next: function(anim, data) {
 		// check the anim, see if we can play it
-		if (!this.checkAnimationRequired(anim)) {
+		if (!this.checkAnimationRequired(anim, data)) {
 			this.emit('animation-needs-data', anim);
 			this.emit('animation-finished',this);
 			return;

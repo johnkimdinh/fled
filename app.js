@@ -41,7 +41,7 @@ controller = new Controller({
 // setup loop for driving this thing
 setInterval(function() {
 
-	animator.update();
+	animator.update(controller.data);
 
 	arduino.send(buffer);
 	

@@ -29,8 +29,6 @@ extend(Controller.prototype, {
 
 		this.data = {};
 
-		this.animator.setData(this.data);
-
 		app.use(express.static(path.join(__dirname, 'public')));
 		app.get('/', function (req, res) {
 			res.sendfile(__dirname + '/index.html');
@@ -63,7 +61,7 @@ extend(Controller.prototype, {
 		this.animator.on('animation-finished',function(animator) {
 			// pop item from playlist
 			var anim = that.playlist.pop();
-			animator.next(anim);
+			animator.next(anim,that.data);
 		});
 
 		var client = {
@@ -112,7 +110,7 @@ extend(Controller.prototype, {
 					fs.writeFile(filename, JSON.stringify(data), function(err) {
 						socket.emit('anim-saved', anim);
 						// update animations class
-						that.animator.next(anim);
+						that.animator.next(anim,that.data);
 					});
 				} else {
 					socket.emit('anim-error','Invalid javascript!');
@@ -121,14 +119,14 @@ extend(Controller.prototype, {
 
 			socket.on('play-animation', function(data) {
 				var anim = that.animations.get(data);
-				that.animator.next(anim);
+				that.animator.next(anim, that.data);
 			});
 			socket.on('queue-animation', function(data) {
 				var anim = that.animations.get(data);
 				that.playlist.enqueue(anim);
 			});
 			socket.on('nextAnim', function() {
-				that.animator.next();
+				that.animator.next(null, that.data);
 			});
 			socket.on('settings', function(data) {
 				that.animator.setOptions(data);
@@ -139,7 +137,7 @@ extend(Controller.prototype, {
 		});
 
 		// all ready? send first animation
-		this.animator.next(that.playlist.pop());
+		this.animator.next(that.playlist.pop(), this.data);
 	},
 	addData: function(packet) {
 		/* expects object of form:
