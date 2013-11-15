@@ -91,7 +91,7 @@ Arduino.prototype = {
 		this.options = options;
 		this.ledCount = options.ledCount;
 		this.connect();
-		this.headerBuffer = new Buffer(256);
+		this.headerBuffer = new Buffer(64);
 		this.headerBuffer.fill(255);
 		this.dataBuffer = new Buffer(this.ledCount*3);
 		this.sendCount = 0;
