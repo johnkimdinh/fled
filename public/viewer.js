@@ -94,7 +94,7 @@ Viewer.prototype = {
 	},
 	nextAnim: function() {
 		if (this.socket) {
-			socket.emit('nextAnim');
+			this.socket.emit('nextAnim');
 		}
 	},
 	resizeContainer: function() {
@@ -176,12 +176,12 @@ Viewer.prototype = {
 	},
 	addListeners: function() {
 		$(window).on('resize', $.proxy(this.onWindowResize, this));
-
+		var that = this;
 		$('#animations .list-group').on('click', '.queue-button', function(ev) {
 			var item = $(ev.target).closest('li');
 			var anim = item.data('anim');
-			if (this.socket) {
-				socket.emit('queue-animation', anim.filename);
+			if (that.socket) {
+				that.socket.emit('queue-animation', anim.filename);
 			}
 		});
 		$('#animations .list-group').on('click', '.edit-button', function(ev) {
@@ -192,8 +192,8 @@ Viewer.prototype = {
 		$('#animations .list-group').on('click', '.play-button', function(ev) {
 			var item = $(ev.target).closest('li');
 			var anim = item.data('anim');
-			if (this.socket) {
-				socket.emit('play-animation', anim.filename);
+			if (that.socket) {
+				that.socket.emit('play-animation', anim.filename);
 			}
 		});
 	},
