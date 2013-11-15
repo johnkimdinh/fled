@@ -3,6 +3,9 @@
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/jquery-1.10.0.min.js"></script>
 	<script src="/viewer.js"></script>
+	<script src="/tween.js"></script>
+	<script src="/color.js"></script>
+	<script src="/display.js"></script>
 	<script src="/editor.js"></script>
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
 	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
@@ -131,6 +134,7 @@ return {
 			</div>
 			<div class="col-md-4 canvas-container">
 				<canvas id="canvas"></canvas>
+				<button id="preview" type="button" class="btn btn-default">Preview</button>
 				<h4>Documentation?</h4>
 				<a href='http://threejs.org/docs/#Reference/Math/Color'>Color</a>
 				<a href='https://github.com/sole/tween.js/'>TweenJS</a>
@@ -140,8 +144,7 @@ return {
 
 	<script>
 		window.onload = function() {
-		  var display = new Display();
-		  var editor = new Editor(display);
+		  var editor = new Editor();
 		};
 	</script>
 </body>

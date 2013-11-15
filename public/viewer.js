@@ -1,4 +1,4 @@
-var socket = io.connect();
+
 
 (function() {
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
@@ -6,14 +6,13 @@ var socket = io.connect();
   window.requestAnimationFrame = requestAnimationFrame;
 })();
 
-var Display = function() {
+var Viewer = function() {
 	this.init();
 };
 
-Display.prototype = {
+Viewer.prototype = {
 	container: null,
 
-	display: null,
 	// the animation being shown/edited right now
 	theAnim: null,
 	// the actual animation instance
@@ -30,7 +29,10 @@ Display.prototype = {
 		this.resizeContainer();
 		this.onUpdate();
 
+	},
+	connect: function() {
 		var that = this;
+		var socket = io.connect();
 		socket.on('reconnect', function() {
 		});
 		socket.on('initDisplay', function(data) {
@@ -43,19 +45,13 @@ Display.prototype = {
 			that.animations(data);
 		});
 		socket.on('update', function (data) {
-			// loop over data and update led info
-			for (var i=0; i < that.leds.length; i++) {
-				var index = i*3,
-					led = that.leds[i];
-				led.r = data[index];
-				led.g = data[index+1];
-				led.b = data[index+2];
-			}
+			that.update(data);
 		});
 
 		socket.on('animation-change', function(animName) {
 			that.onAnimationChange(animName);
-		})
+		});
+		this.socket = socket;
 	},
 	initDisplay: function(config) {
 		this.leds = [];
@@ -97,7 +93,9 @@ Display.prototype = {
 		$('#animationName').text(animName);
 	},
 	nextAnim: function() {
-		socket.emit('nextAnim');
+		if (this.socket) {
+			socket.emit('nextAnim');
+		}
 	},
 	resizeContainer: function() {
 		this.canvas.width('100%');
@@ -182,7 +180,9 @@ Display.prototype = {
 		$('#animations .list-group').on('click', '.queue-button', function(ev) {
 			var item = $(ev.target).closest('li');
 			var anim = item.data('anim');
-			socket.emit('queue-animation', anim.filename);
+			if (this.socket) {
+				socket.emit('queue-animation', anim.filename);
+			}
 		});
 		$('#animations .list-group').on('click', '.edit-button', function(ev) {
 			var item = $(ev.target).closest('li');
@@ -192,8 +192,21 @@ Display.prototype = {
 		$('#animations .list-group').on('click', '.play-button', function(ev) {
 			var item = $(ev.target).closest('li');
 			var anim = item.data('anim');
-			socket.emit('play-animation', anim.filename);
+			if (this.socket) {
+				socket.emit('play-animation', anim.filename);
+			}
 		});
+	},
+
+	update: function(data) {
+		// loop over data and update led info
+		for (var i=0; i < this.leds.length; i++) {
+			var index = i*3,
+				led = this.leds[i];
+			led.r = data[index];
+			led.g = data[index+1];
+			led.b = data[index+2];
+		}
 	},
 	
 	onUpdate: function() {
