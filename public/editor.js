@@ -12,11 +12,10 @@ Editor.prototype = {
 		var socket = io.connect();
 	    this.socket = socket;
 	    socket.on('anim-data', function(data) {
-	    	// update ui
-	    	$('#animName').val(data.name);
-	    	$('#author').val(data.author);
-	    	$('#filename').text(data.filename);
-	    	editor.setValue(data.code);
+	    	that.setAnim(data);
+	    });
+	    socket.on('anim-saved', function(data) {
+	    	that.setAnim(data);
 	    });
 	    var that = this;
 	    socket.on('data', function(data) {
@@ -27,6 +26,13 @@ Editor.prototype = {
 	    if (animName) {
 	    	socket.emit('get-anim', animName);
 	    }
+	},
+	setAnim: function(data) {
+    	// update ui
+    	$('#animName').val(data.name);
+    	$('#author').val(data.author);
+    	$('#filename').text(data.filename);
+    	this.editor.setValue(data.code);
 	},
 	initDisplay: function() {
 		var display = new Display();
@@ -102,10 +108,24 @@ Editor.prototype = {
 		this.display.play();
 	},
 	onSave: function() {
-    	var animName = $('#animName').val() || 'Untitled';
-    	var author = $('#author').val() || '';
+    	var animName = $('#animName').val();
+    	var author = $('#author').val();
     	var filename = $('#filename').text();
-    	socket.emit('save-anim', {name: animName, filename: filename, author: author, code: this.editor.getValue()});
+    	if (!animName) {
+    		var el = $('#animName');
+  			el.clearQueue();
+    		el.css('background-color', '#FF9999');
+    		el.animate({'backgroundColor': '#FFFFFF'},2000);
+    		return;
+    	}
+    	if (!author) {
+    		var el = $('#author');
+    		el.clearQueue();
+    		el.css('background-color', '#FF9999');
+    		el.animate({'backgroundColor': '#FFFFFF'},2000);
+    		return;
+    	}
+    	this.socket.emit('save-anim', {name: animName, filename: filename, author: author, code: this.editor.getValue()});
 	},
 	init: function() {
 		this.initEditor();

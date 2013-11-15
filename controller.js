@@ -92,17 +92,18 @@ extend(Controller.prototype, {
 			socket.on('save-anim', function(data) {
 				// save data to drive
 				var timestamp = data.filename;
-				var filename = timestamp;
-				if (!filename) {
-					filename = 'anims/' + new Date().getTime() + '.js';
+				var filename = null;
+				if (!timestamp) {
+					timestamp = new Date().getTime() + '.js';
+					filename = 'anims/' + timestamp;
 				} else {
-					filename = 'anims/' + filename;
+					filename = 'anims/' + timestamp;
 				}
 				var anim = that.animations.set(timestamp, data);
 				if (anim) {
 					// write to disk
 					fs.writeFile(filename, JSON.stringify(data), function(err) {
-						socket.emit('anim-saved', data);
+						socket.emit('anim-saved', anim);
 						// update animations class
 						that.animator.next(anim);
 					});
