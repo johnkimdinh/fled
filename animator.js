@@ -21,8 +21,8 @@ var Animator = function(ledBuffer, display, options) {
 			durationMax: 2
 		},
 		animation: {
-			durationMin: 10,
-			durationMax: 10
+			durationMin: 30,
+			durationMax: 30
 		},
 		hslOffset: {
 			h: 0,
@@ -180,7 +180,7 @@ extend(Animator.prototype, {
 		// let it setup whatever it needs
 		transition.setup(this.display, this.oldValues);
 
-		console.log('info: running transition for ' + transition.duration + 'ms');
+		//console.log('info: running transition for ' + transition.duration + 'ms');
 		// create a tween to manage its lifetime
 		var tween = this.display.tween(transition, {
 				duration: transition.duration,
@@ -194,7 +194,7 @@ extend(Animator.prototype, {
 		tween.onComplete(function() {
 			// transition complete, clear it
 			this.transition = null;
-			console.log('info: clearing transition');
+			//console.log('info: clearing transition');
 		}.bind(this));
 
 		tween.start();
@@ -206,7 +206,34 @@ extend(Animator.prototype, {
 		var idx = Math.floor(Math.random()*this.transitions.length);
 		return this.transitions[idx];
 	},
+	checkAnimationRequired: function(anim) {
+		if (anim.required) {
+			var required = anim.required;
+			for (var i=0; i < required.length; i++) {
+				var requiredString = required[i];
+				// split into paths and check on data object
+				var paths = requiredString.split('.');
+				var obj = this.data;
+				for (var j=0; j < paths.length; j++) {
+					if (typeof obj[paths[j]] === 'undefined') {
+						console.log('Animation rejected missing data : ' + requiredString);
+						return false;
+					}
+					obj = obj[paths[j]];
+				}
+			}
+			return true;
+		}
+
+		return true;
+	},
 	next: function(anim) {
+		// check the anim, see if we can play it
+		if (!this.checkAnimationRequired(anim)) {
+			this.emit('animation-needs-data', anim);
+			this.emit('animation-finished',this);
+			return;
+		}
 		this.startTime = Date.now();
 		this.display.cleanAnimation();
 		

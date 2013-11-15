@@ -136,6 +136,14 @@ return {
 			<div class="col-md-4 canvas-container">
 				<canvas id="canvas"></canvas>
 				<button id="preview" type="button" class="btn btn-default">Preview</button>
+				<h4>Properties</h4>
+				<form role="form">
+				  <div class="form-group">
+				    <label for="requiredData">Required Data</label>
+				   <textarea class="form-control" id="requiredData" rows="3">[]</textarea>
+				   <span class="help-block">Specify an array of full paths to data values that must exist in order to run this animation, e.g. <code>['flume.top_ips']</code></span>
+				  </div>
+				</form>
 				<h4>Documentation?</h4>
 				<a href='http://threejs.org/docs/#Reference/Math/Color'>Color</a>
 				<a href='https://github.com/sole/tween.js/'>TweenJS</a>

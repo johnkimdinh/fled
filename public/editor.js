@@ -32,6 +32,7 @@ Editor.prototype = {
     	$('#animName').val(data.name);
     	$('#author').val(data.author);
     	$('#filename').text(data.filename);
+    	$('#requiredData').val(JSON.stringify(data.required));
     	this.editor.setValue(data.code);
 	},
 	initDisplay: function() {
@@ -51,11 +52,34 @@ Editor.prototype = {
 	    	that.onPreview();
 	    });	
 	},
+	checkRequired: function() {
+		var required = this.parseRequiredData();
+		for (var i=0; i < required.length; i++) {
+			var requiredString = required[i];
+			// split into paths and check on data object
+			var paths = requiredString.split('.');
+			var obj = this.data;
+			for (var j=0; j < paths.length; j++) {
+				if (typeof obj[paths[j]] === 'undefined') {
+					return false;
+				}
+				obj = obj[paths[j]];
+			}
+		}
+		return true;
+	},
 	onPreview: function() {
 		if (this.animInterval) {
     		clearInterval(this.animInterval);
     		this.animInterval = null;
     	}
+		if (!this.checkRequired()) {
+    		var el = $('#requiredData');
+  			el.clearQueue();
+    		el.css('background-color', '#FF9999');
+    		el.animate({'backgroundColor': '#FFFFFF'},2000);
+    		return;
+		}
 		// load code, execute it
 		var code = this.editor.getValue();
 
@@ -107,6 +131,26 @@ Editor.prototype = {
 
 		this.display.play();
 	},
+	parseRequiredData: function() {
+		var data = $('#requiredData').val();
+		var requiredData = [];
+		if (data!=='') {
+			try {
+				data = data.replace(/'/g, '"');
+				requiredData = JSON.parse(data);
+				if ( Object.prototype.toString.call( requiredData ) !== '[object Array]') {
+					throw Exception();
+				}
+			} catch(ex) {
+	    		var el = $('#requiredData');
+	  			el.clearQueue();
+	    		el.css('background-color', '#FF9999');
+	    		el.animate({'backgroundColor': '#FFFFFF'},2000);
+	    		return false;
+			}
+		}
+		return requiredData;
+	},
 	onSave: function() {
     	var animName = $('#animName').val();
     	var author = $('#author').val();
@@ -125,7 +169,12 @@ Editor.prototype = {
     		el.animate({'backgroundColor': '#FFFFFF'},2000);
     		return;
     	}
-    	this.socket.emit('save-anim', {name: animName, filename: filename, author: author, code: this.editor.getValue()});
+    	// attempt to parse required data parameter
+    	var data = this.parseRequiredData();
+    	if (data===false) {
+    		return;
+    	}
+    	this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: data, code: this.editor.getValue()});
 	},
 	init: function() {
 		this.initEditor();

@@ -53,14 +53,11 @@ extend(Animations.prototype, {
 			var wrappedCode = "val = function() { " + data.code + " }",
 				script = vm.createScript(wrappedCode,filename);
 
-			var animData = {
-				name: data.name,
-				code: data.code,
-				filename: filename,
-				script: script
-			};
+			data.filename = filename;
+			data.script = script;
+
 			this.anims.push(filename);
-			this.animsMap[filename] = animData;
+			this.animsMap[filename] = data;
 			this.emit('change', this.animsMap);
 		} catch (ex) {
 			console.log(ex.stack);
