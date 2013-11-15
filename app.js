@@ -4,14 +4,17 @@
 // create animator for running animation code and updating LED values
 
 var Arduino = require('./arduino'),
-	Visualizer = require('./visualizer'),
+	Controller = require('./controller'),
 	Animator = require('./animator'),
+	Playlist = require('./playlist'),
+	RandomSelector = require('./selectors/random'),
 	Display = require('./display'),
 	FRAME_RATE = 30,
 	intervalDelay = Math.floor(1000/FRAME_RATE),
 	animator = null,
-	visualizer = null,
-	arduino = null;
+	controller = null,
+	arduino = null,
+	playlist = null;
 
 // lets create the display object
 var display = new Display();
@@ -22,8 +25,14 @@ buffer.fill(0);
 
 // pass in buffer to animator
 animator = new Animator(buffer,display);
+playlist = new Playlist(new RandomSelector(animator.anims));
 arduino = new Arduino({ledCount:display.MAX_LEDS,animator:animator});
-visualizer = new Visualizer(animator);
+
+// setup controller to orchestrate everything
+controller = new Controller({
+	animator: animator,
+	playlist: playlist
+});
 
 // setup loop for driving this thing
 setInterval(function() {
@@ -31,7 +40,8 @@ setInterval(function() {
 	animator.update();
 
 	arduino.send(buffer);
-	visualizer.send(buffer);
+	
+	controller.send(buffer);
 
 },intervalDelay);
 

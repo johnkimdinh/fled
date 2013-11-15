@@ -3,39 +3,174 @@
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/jquery-1.10.0.min.js"></script>
 	<script src="/dat.gui.min.js"></script>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+	<script src="/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+	<meta charset="utf-8">
+	<!--<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">-->
 	<style type="text/css">
-		#container {
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			width: 30%;
-			background: black;
-		}
-		#animationName {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			left: 0;
-			background: rgba(0,0,0,0.5);
-			color: white;
-			font-weight: bold;
-			text-transform: uppercase;
-			font-size: 18px;
-			padding: 8px;
-			text-align: right;
-		}
-		#canvas {
-			width: 100%;
-			height: 100%;
-			background: black;
-		}
+			body {
+				background-color: #000000;
+				margin: 0px;
+			}
+
+			a {
+				color:#0078ff;
+			}
+
+			.canvas-container {
+				padding: 0px;
+			}
+			#canvas {
+				width: 100%;
+				max-height: 300px;
+				margin: 0 auto;
+			}
+			.container {
+				
+				margin: 0 auto;
+			}
+			.top-area {
+				background: #333;
+				color: white;
+			}
+			.sidebar {
+			}
+			.sidebar .nav-pills {
+				font-size: 12px;
+			}
+			.sidebar .nav-pills li a {
+				padding: 4px 8px;
+			}
+			.sidebar .tab-content {
+				padding: 4px;
+				margin-top: 4px;
+				border-radius: 4px;
+				background: #ccc;
+				color: black;
+			}
+			#editor {
+		        margin: 0;
+		        width: 100%;
+		        min-height: 300px;
+		        height: 100%;
+			}
 	</style>
 </head>
 <body>
-	<div id="container">
-		<canvas id="canvas"></canvas>
+	<div class="container">
+		<div class="row top-area">
+			<div class="col-md-8 canvas-container">
+				<canvas id="canvas"></canvas>
+			</div>
+			<div class="col-md-4 sidebar">
+				<h2>FLED</h2>
+				<ul class="nav nav-pills btn-group-xs">
+					<li class="active"><a href="#playlist" data-toggle="tab">Playlist</a></li>
+					<li><a href="#animations" data-toggle="tab">Animations</a></li>
+					<li><a href="#variables" data-toggle="tab">Variables</a></li>
+				</ul>
+				<div class="tab-content clearfix">
+					<div class="tab-pane active" id="playlist">
+						<ul class="list-group">
+						  <li class="list-group-item">Cras justo odio</li>
+						  <li class="list-group-item">Dapibus ac facilisis in</li>
+						  <li class="list-group-item">Morbi leo risus</li>
+						  <li class="list-group-item">Porta ac consectetur ac</li>
+						  <li class="list-group-item">Vestibulum at eros</li>
+						</ul>
+					</div>
+					<div class="tab-pane" id="animations">
+						<ul class="list-group">
+						  <li class="list-group-item">Cras justo odio</li>
+						  <li class="list-group-item">Dapibus ac facilisis in</li>
+						  <li class="list-group-item">Morbi leo risus</li>
+						  <li class="list-group-item">Porta ac consectetur ac</li>
+						  <li class="list-group-item">Vestibulum at eros</li>
+						</ul>
+					</div>
+					<div class="tab-pane" id="variables">
+						Variable explorer
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="code-area">
+			<div class="row">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#code-area-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+					    </button>
+						<a class="navbar-brand" href="#">Code Editor</a>
+					</div>
+					<div class="collapse navbar-collapse" id="code-area-navbar-collapse">
+						<form class="navbar-form navbar-left" role="search">
+						  <div class="form-group">
+						    <input type="text" class="form-control" placeholder="Animation Name">
+						  </div>
+						  <button type="submit" class="btn btn-default">Create</button>
+						</form>
+						<form class="navbar-form navbar-right" role="save">
+							<button type="button" class="btn btn-success">Save</button>
+							<button type="button" class="btn btn-danger">Delete</button>
+						</form>
+					</div><!-- /.navbar-collapse -->
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12" id="editor">
+					var tweenedValues = {
+						hue: 0,
+						position: 0
+					};
+
+					return {
+						init: function(display,timeline) {
+							var black = new Display.Color(0x00);
+							this.display = display;
+							for (var i=0; i &lt; display.leds.length; i++) {
+								display.leds[i] = black;
+							}
+
+					      	display.tween(tweenedValues,{
+					          to: {hue: 1},
+					          duration: 5000,
+					          repeat: Infinity,
+					          yoyo: true,
+					          delay: 0,
+					          easing: TWEEN.Easing.Cubic.InOut
+					        });
+					      	display.tween(tweenedValues,{
+					          to: {position: 1},
+					          duration: 30000,
+					          repeat: Infinity,
+					          yoyo: true,
+					          delay: 0
+					        });
+						},
+						onUpdate: function(display) {
+							var c = null;
+
+							for (var i=0; i &lt; display.leds.length; i++) {
+								var x = i%display.cols,
+									y = Math.floor(i/display.cols);
+								c = new Color(0x0);
+								var h = ((tweenedValues.hue) + (x/display.cols))%1,
+									s = 1,
+									l = 0.5;
+								c.setHSL(h,s,l);
+								display.setColor(i, c);
+							}
+						}
+					};
+				</div>
+			</div>
+		</div>
 	</div>
-	<div id="animationName"></div>
 
 	<script>
 		var socket = io.connect();
@@ -75,6 +210,7 @@
 				this.resizeContainer();
 				this.onUpdate();
 
+				this.initEditor();
 
 				var that = this;
 				socket.on('reconnect', function() {
@@ -82,6 +218,9 @@
 				});
 				socket.on('initDisplay', function(data) {
 					that.initDisplay(data);
+				});
+				socket.on('playlist', function(data) {
+					that.playlist(data);
 				});
 				socket.on('update', function (data) {
 					// loop over data and update led info
@@ -116,6 +255,15 @@
 					this.leds.push({r: 0, g: 0, b: 0});
 				}
 				this.resizeContainer();
+			},
+			initEditor: function() {
+				var editor = ace.edit("editor");
+			    editor.setTheme("ace/theme/monokai");
+			    editor.getSession().setMode("ace/mode/javascript");
+			    this.codeEditor = editor;
+			},
+			playlist: function(list) {
+				// update playlist in UI
 			},
 			onAnimationChange: function(animName) {
 				$('#animationName').text(animName);
@@ -243,10 +391,17 @@
 				});
 			},
 			resizeContainer: function() {
+				this.canvas.width('100%');
 				var width = this.canvas.width();
 				var height = Math.round(width / 1.5);
+				var maxHeight =  parseInt(this.canvas.css('max-height'),10);
+				if (height > maxHeight) {
+					height = maxHeight;
+					// recalculate width
+					width = Math.round(height * 1.5);
+					this.canvas.width(width);
+				}
 				this.canvas.height(height);
-				this.canvas.width(width);
 				this.canvas.attr('width', width);
 				this.canvas.attr('height', height);
 				// calculate spacing for LEDs
@@ -266,7 +421,6 @@
 			},
 			initScene: function() {
 
-				this.container = $( '#container' );
 				this.canvas = $('#canvas');
 			},
 			createLEDS: function() {
@@ -314,8 +468,6 @@
 				}
 			},
 			addListeners: function() {
-				var container = this.container;
-
 				$(window).on('resize', $.proxy(this.onWindowResize, this));
 			},
 			
