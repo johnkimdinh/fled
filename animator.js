@@ -89,14 +89,14 @@ extend(Animator.prototype, {
 		this.startTime = Date.now();
 		this.display.play();
 	},
-	update: function(time, data) {
+	update: function(data) {
 		var elapsed = Date.now() - this.startTime;
 		// update tweens and display state
 		this.display.update(this.startTime + (elapsed*this.options.speedFactor));
 
 		// update current animation
 		if (this.currentAnim) {
-			this.currentAnim.onUpdate(this.display,data,this);
+			this.currentAnim.onUpdate(this.display,data);
 		}
 
 		// copy led color values into buffer
