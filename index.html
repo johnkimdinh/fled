@@ -1,200 +1,98 @@
-
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>three.js canvas - particles - sprites</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
-		<style>
+<html>
+<head>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/jquery-1.10.0.min.js"></script>
+	<script src="/viewer.js"></script>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style type="text/css">
 			body {
 				background-color: #000000;
 				margin: 0px;
-				overflow: hidden;
 			}
 
 			a {
 				color:#0078ff;
 			}
 
-			#display {
+			.canvas-container {
+				padding: 0px;
+				text-align: center;
+			}
+			#canvas {
 				width: 100%;
 			}
 			.container {
-				max-width: 800px;
+				
 				margin: 0 auto;
 			}
-		</style>
-	</head>
-	<body>
-
-		<script src="./three.min.js"></script>
-		<script src="./jquery-1.10.0.min.js"></script>
-		<script src="./stats.min.js"></script>
-		<script src="./tween.min.js"></script>
-
-		<div class="container">
-			<div class="pure-g-r">
-				<div class="pure-u-4-5">
-					<div id="display"></div>
+			.top-area {
+				background: #333;
+				color: white;
+			}
+			.sidebar {
+			}
+			.sidebar .tab-content {
+				padding: 4px;
+				margin-top: 4px;
+				border-radius: 4px;
+				background: #ccc;
+				color: black;
+				overflow: auto;
+				overflow-y: scroll;
+			}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="navbar navbar-default" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+				    </button>
+					<a class="navbar-brand" href="#">FLED</a>
 				</div>
-				<div class="pure-u-1-5">
-					<h3>Playlist</h3>
-				</div>
+				<div class="collapse navbar-collapse" id="navbar-collapse">
+					<form class="navbar-form navbar-right" role="save">
+						<button type="button" class="btn btn-success">New</button>
+					</form>
+				</div><!-- /.navbar-collapse -->
 			</div>
-			<div class="pure-g-r">
-				<div class="pure-u-1">
-					<h2>Stuff</h2>
+		</div>
+		<div class="row top-area">
+			<div class="col-md-8 canvas-container">
+				<canvas id="canvas"></canvas>
+			</div>
+			<div class="col-md-4 sidebar">
+				<h2>FLED</h2>
+				<ul class="nav nav-pills btn-group-xs">
+					<li class="active"><a href="#playlist" data-toggle="tab">Playlist</a></li>
+					<li><a href="#animations" data-toggle="tab">Animations</a></li>
+				</ul>
+				<div class="tab-content clearfix">
+					<div class="tab-pane active" id="playlist">
+						<ul class="list-group">
+						</ul>
+					</div>
+					<div class="tab-pane" id="animations">
+						<ul class="list-group">
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<script>
-
-			var Display = function() {
-				this.init();
-			};
-
-			Display.prototype = {
-				mouseX: 0,
-				mouseY: 0,
-
-				MAX_LEDS: 96,
-				LED_ROWS: 8,
-				LED_COLS: 12,
-
-				init: function() {
-					this.container = $('#display');
-					this.resizeContainer();
-
-					this.initScene();
-					//this.initStats();
-
-					window.addEventListener( 'resize', $.proxy(this.onWindowResize,this), false );
-
-					/*document.addEventListener( 'mousemove', $.proxy(this.onDocumentMouseMove,this), false );
-					document.addEventListener( 'touchstart', $.proxy(this.onDocumentTouchStart,this), false );
-					document.addEventListener( 'touchmove', $.proxy(this.onDocumentTouchMove,this), false );*/
-
-					this.animate();
-				},
-				resizeContainer: function() {
-					var width = this.container.width();
-					var height = Math.round(width / 1.5);
-					this.container.height(height);
-				},
-				onWindowResize: function() {
-					this.resizeContainer();
-					var width = this.container.width();
-					var height = this.container.height();
-
-					this.halfX = width / 2;
-					this.halfY = height / 2;
-
-					this.camera.aspect = width / height;
-					this.camera.updateProjectionMatrix();
-
-					this.renderer.setSize(width, height);
-				},
-				generateSprite: function() {
-					var canvas = document.createElement( 'canvas' );
-					canvas.width = 16;
-					canvas.height = 16;
-
-					var context = canvas.getContext( '2d' );
-					var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
-					gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
-					gradient.addColorStop( 1, 'rgba(255,0,0,0)' );
-
-					context.fillStyle = gradient;
-					context.fillRect( 0, 0, canvas.width, canvas.height );
-
-					return canvas;
-				},
-
-
-				initScene: function() {
-					var camera = new THREE.PerspectiveCamera( 75, this.container.width() / this.container.height(), 1, 5000 );
-					camera.position.z = 100;
-
-					var scene = new THREE.Scene();
-
-					var xOff = -(this.LED_COLS / 2)*20 + 10,
-						yOff = -(this.LED_ROWS / 2)*20 + 10;
-					
-					this.leds = [];
-					var i = 0;
-					for ( var x = 0; x < this.LED_COLS; x++ ) {
-						for (var y = 0; y < this.LED_ROWS; y++) {
-							var map = new THREE.Texture( this.generateSprite() );
-							map.needsUpdate = true;
-							var material = new THREE.SpriteMaterial( {
-								map: map,
-								blending: THREE.AdditiveBlending,
-								transparent: false,
-								useScreenCoordinates: false,
-								color: 0xFF00FF
-							} );
-
-							var particle = new THREE.Sprite( material );
-
-
-							particle.position.x = xOff + x*20;
-							particle.position.y = yOff + y*20;
-							particle.position.z = 0;
-							particle.scale.x = particle.scale.y = 1;
-
-							particle.material.map.needsUpdate = true;
-
-							scene.add( particle );
-							this.leds.push(particle);
-						}
-					}
-
-					var renderer = new THREE.CanvasRenderer();
-					//var renderer = new THREE.WebGLRenderer({antialias: true});
-					renderer.setClearColor( 0x000000 );
-					renderer.setSize( this.container.width(), this.container.height() );
-
-					this.container.append( renderer.domElement );
-
-					this.renderer = renderer;
-					this.scene = scene;
-					this.camera = camera;
-				},
-				initStats: function() {
-					var stats = new Stats();
-					stats.domElement.style.position = 'absolute';
-					stats.domElement.style.top = '0px';
-					this.container.append( stats.domElement );
-
-					this.stats = stats;
-				},
-
-				animate: function() {
-					requestAnimationFrame( $.proxy(this.animate,this) );
-
-					this.render();
-					for (var i=0; i < this.leds.length; i++) {
-						this.leds[i].color = new THREE.Color(0xFF00FF).setHSL(Math.random(), 0.8, 0.9);
-					}
-					//this.stats.update();
-				},
-
-				render: function() {
-
-					TWEEN.update();
-
-					this.camera.position.x += ( this.mouseX - this.camera.position.x ) * 0.05;
-					this.camera.position.y += ( - this.mouseY - this.camera.position.y ) * 0.05;
-					this.camera.lookAt( this.scene.position );
-
-					this.renderer.render( this.scene, this.camera );
-
-				}
-			};
-
-			var d = new Display();
-		</script>
-	</body>
+	<script>
+		window.onload = function() {
+		  var display = new Display();
+		};
+	</script>
+</body>
 </html>

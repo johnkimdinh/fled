@@ -65,7 +65,7 @@ extend(Playlist.prototype, {
 	},
 	// populate users the current picker to fill the playlist with some animations
 	populate: function(quiet) {
-		while (this.list.length < 5) {
+		while (this.list.length < 1) {
 			this.enqueue(this.picker.select(),quiet);
 		}
 	},

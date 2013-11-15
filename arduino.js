@@ -31,7 +31,7 @@ Arduino.prototype = {
 
 			var port = null;
 			ports.forEach(function(p) {
-				console.log('Port : ' + JSON.stringify(p));
+				//console.log('Port : ' + JSON.stringify(p));
 				if (p.manufacturer && p.manufacturer.indexOf('Arduino')!==-1) {
 					port = p.comName;
 				} else {
@@ -110,7 +110,7 @@ Arduino.prototype = {
 	},
 	send: function(buffer) {
 		if (!this.serialPort) {
-			console.log('warn: no arduino port available for writing');
+		//	console.log('warn: no arduino port available for writing');
 			return;
 		}
 		try {

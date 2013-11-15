@@ -18,11 +18,11 @@ var Animator = function(ledBuffer, display, options) {
 	options = options || {
 		transition: {
 			durationMin: 2,
-			durationMax: 10
+			durationMax: 2
 		},
 		animation: {
 			durationMin: 10,
-			durationMax: 120
+			durationMax: 10
 		},
 		hslOffset: {
 			h: 0,
@@ -59,18 +59,16 @@ extend(Animator.prototype, {
 		// store reference to LED buffer for population later
 		this.buffer = ledBuffer;
 
-		this.anims = [];
-		this.animsMap = {};
-		this.animIndex = 0;
-
 		this.currentAnim = null;
+		this.nextAnim = null;
 
 		// read all animations and transitions and get them ready for usage
 		this.display = display;
-		this.compileAnimations();
 		this.loadTransitions();
-
-		this.next();
+		this.data = {};
+	},
+	setData: function(data) {
+		this.data = data;
 	},
 	loadTransitions: function() {
 		var transitionModules = fs.readdirSync('./transitions'),
@@ -80,29 +78,6 @@ extend(Animator.prototype, {
 		for (var i=0; i < transitionModules.length; i++) {
 			this.transitions.push(require('./transitions/' + transitionModules[i]));
 		}
-	},
-	compileAnimations: function() {
-		// read all filenames in anims folder
-		var animFiles = fs.readdirSync('./anims'),
-			filename, code, wrappedCode, script;
-
-		// compile them into Script objects and store in our anims array
-		for (var i=0; i < animFiles.length; i++) {
-			filename = animFiles[i];
-			code = fs.readFileSync('./anims/' + filename);
-			wrappedCode = "val = function() { " + code + " }";
-			script = vm.createScript(wrappedCode,filename);
-			this.anims.push(filename);
-			this.options.animations[filename] = true;
-			this.animsMap[filename] = script;
-		}
-		console.log('info: Animations = ' + JSON.stringify(this.anims));
-	},
-	activateAnimation: function(name) {
-		this.options.animations[name] = true;
-	},
-	deactivateAnimation: function(name) {
-		this.options.animations[name] = false;
 	},
 	setOptions: function(options, value) {
 		if (typeof options === 'object') {
@@ -125,7 +100,7 @@ extend(Animator.prototype, {
 
 		// update current animation
 		if (this.currentAnim) {
-			this.currentAnim.onUpdate(this.display,this.touchData,this);
+			this.currentAnim.onUpdate(this.display,this.data,this);
 		}
 
 		// copy led color values into buffer
@@ -231,33 +206,11 @@ extend(Animator.prototype, {
 		var idx = Math.floor(Math.random()*this.transitions.length);
 		return this.transitions[idx];
 	},
-	getActiveAnims: function() {
-		var activeAnims = [];
-		for (var animName in this.options.animations) {
-			if (this.options.animations[animName]) {
-				activeAnims.push(animName);
-			}
-		}
-		return activeAnims;
-	},
-	resetIndex: function() {
-		this.animIndex = -1;
-	},
-	next: function() {
+	next: function(anim) {
 		this.startTime = Date.now();
 		this.display.cleanAnimation();
-		// forces transition to the next animation immediately
-		this.animIndex++;
-		// loop round
-		var anims = this.getActiveAnims();
-
-		if (this.animIndex>=anims.length) {
-			this.animIndex = 0;
-		}
-		var animName = anims[this.animIndex],
-			script = this.animsMap[animName];
-
-		this.currentAnim = script.runInNewContext({
+		
+		this.currentAnim = anim.script.runInNewContext({
 			Display: Display,
 			Color: Color,
 			TWEEN: TWEEN,
@@ -288,9 +241,12 @@ extend(Animator.prototype, {
 		min = Math.min(min, max);
 		duration = Math.round((min + (Math.random() * (max-min))) * 1000) + transition.duration;
 
-		console.log('info: running animation : ' + animName + ' for ' + duration + 'ms');
-		this.nextAnimTimeout = setTimeout(this.next.bind(this), duration);
-		this.emit('animation-change', animName);
+		console.log('info: running animation : ' + anim.name + ' for ' + duration + 'ms');
+		var that = this;
+		this.nextAnimTimeout = setTimeout(function() {
+			that.emit('animation-finished',that);
+		}, duration);
+		this.emit('animation-change', anim.name);
 		this.display.play();
 	},
 	clearShift: function() {

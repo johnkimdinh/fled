@@ -2,12 +2,13 @@
 <head>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/jquery-1.10.0.min.js"></script>
-	<script src="/dat.gui.min.js"></script>
+	<script src="/viewer.js"></script>
+	<script src="/editor.js"></script>
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
 	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
 	<script src="/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 	<meta charset="utf-8">
-	<!--<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">-->
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<style type="text/css">
 			body {
 				background-color: #000000;
@@ -19,12 +20,10 @@
 			}
 
 			.canvas-container {
-				padding: 0px;
+				text-align: center;
 			}
 			#canvas {
 				width: 100%;
-				max-height: 300px;
-				margin: 0 auto;
 			}
 			.container {
 				
@@ -36,483 +35,78 @@
 			}
 			.sidebar {
 			}
-			.sidebar .nav-pills {
-				font-size: 12px;
-			}
-			.sidebar .nav-pills li a {
-				padding: 4px 8px;
-			}
 			.sidebar .tab-content {
 				padding: 4px;
 				margin-top: 4px;
 				border-radius: 4px;
 				background: #ccc;
 				color: black;
+				overflow: auto;
+				overflow-y: scroll;
+			}
+			.code-container {
+				position: relative;
 			}
 			#editor {
 		        margin: 0;
 		        width: 100%;
-		        min-height: 300px;
-		        height: 100%;
+		        height: 600px;
 			}
+
 	</style>
 </head>
 <body>
 	<div class="container">
-		<div class="row top-area">
-			<div class="col-md-8 canvas-container">
-				<canvas id="canvas"></canvas>
+		<div class="navbar navbar-default navbar-inverse" role="navigation">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+			    </button>
+				<a class="navbar-brand" href="#">FLED</a>
 			</div>
-			<div class="col-md-4 sidebar">
-				<h2>FLED</h2>
-				<ul class="nav nav-pills btn-group-xs">
-					<li class="active"><a href="#playlist" data-toggle="tab">Playlist</a></li>
-					<li><a href="#animations" data-toggle="tab">Animations</a></li>
-					<li><a href="#variables" data-toggle="tab">Variables</a></li>
-				</ul>
-				<div class="tab-content clearfix">
-					<div class="tab-pane active" id="playlist">
-						<ul class="list-group">
-						  <li class="list-group-item">Cras justo odio</li>
-						  <li class="list-group-item">Dapibus ac facilisis in</li>
-						  <li class="list-group-item">Morbi leo risus</li>
-						  <li class="list-group-item">Porta ac consectetur ac</li>
-						  <li class="list-group-item">Vestibulum at eros</li>
-						</ul>
-					</div>
-					<div class="tab-pane" id="animations">
-						<ul class="list-group">
-						  <li class="list-group-item">Cras justo odio</li>
-						  <li class="list-group-item">Dapibus ac facilisis in</li>
-						  <li class="list-group-item">Morbi leo risus</li>
-						  <li class="list-group-item">Porta ac consectetur ac</li>
-						  <li class="list-group-item">Vestibulum at eros</li>
-						</ul>
-					</div>
-					<div class="tab-pane" id="variables">
-						Variable explorer
-					</div>
-				</div>
-			</div>
+			<div class="collapse navbar-collapse" id="navbar-collapse">
+				<h4 id="filename"></h4>
+			    <form id="saveForm" class="navbar-form navbar-right" role="edit">
+			      <div class="form-group">
+			        <input id="animName" type="text" class="form-control" placeholder="Anim Name">
+			      </div>
+			      <div class="form-group">
+			        <input id="author" type="text" class="form-control" placeholder="Who R U?">
+			      </div>
+			      <button type="submit" class="btn btn-success">Save</button>
+			    </form>
+			</div><!-- /.navbar-collapse -->
 		</div>
-		<div class="code-area">
-			<div class="row">
-				<div class="navbar navbar-default" role="navigation">
-					<div class="navbar-header">
-						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#code-area-navbar-collapse">
-							<span class="sr-only">Toggle navigation</span>
-							<span class="icon-bar"></span>
-							<span class="icon-bar"></span>
-							<span class="icon-bar"></span>
-					    </button>
-						<a class="navbar-brand" href="#">Code Editor</a>
+		<div class="row">
+			<div class="col-md-8 code-container">
+				<ul class="nav nav-tabs btn-group-xs">
+					<li class="active"><a href="#editor" data-toggle="tab">Code</a></li>
+					<li><a href="#data" data-toggle="tab">Data</a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="editor">
+						<ul class="list-group">
+						</ul>
 					</div>
-					<div class="collapse navbar-collapse" id="code-area-navbar-collapse">
-						<form class="navbar-form navbar-left" role="search">
-						  <div class="form-group">
-						    <input type="text" class="form-control" placeholder="Animation Name">
-						  </div>
-						  <button type="submit" class="btn btn-default">Create</button>
-						</form>
-						<form class="navbar-form navbar-right" role="save">
-							<button type="button" class="btn btn-success">Save</button>
-							<button type="button" class="btn btn-danger">Delete</button>
-						</form>
-					</div><!-- /.navbar-collapse -->
+					<div class="tab-pane" id="data">
+						<pre class="json-data">
+						</pre>
+					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-md-12" id="editor">
-					var tweenedValues = {
-						hue: 0,
-						position: 0
-					};
-
-					return {
-						init: function(display,timeline) {
-							var black = new Display.Color(0x00);
-							this.display = display;
-							for (var i=0; i &lt; display.leds.length; i++) {
-								display.leds[i] = black;
-							}
-
-					      	display.tween(tweenedValues,{
-					          to: {hue: 1},
-					          duration: 5000,
-					          repeat: Infinity,
-					          yoyo: true,
-					          delay: 0,
-					          easing: TWEEN.Easing.Cubic.InOut
-					        });
-					      	display.tween(tweenedValues,{
-					          to: {position: 1},
-					          duration: 30000,
-					          repeat: Infinity,
-					          yoyo: true,
-					          delay: 0
-					        });
-						},
-						onUpdate: function(display) {
-							var c = null;
-
-							for (var i=0; i &lt; display.leds.length; i++) {
-								var x = i%display.cols,
-									y = Math.floor(i/display.cols);
-								c = new Color(0x0);
-								var h = ((tweenedValues.hue) + (x/display.cols))%1,
-									s = 1,
-									l = 0.5;
-								c.setHSL(h,s,l);
-								display.setColor(i, c);
-							}
-						}
-					};
-				</div>
+			<div class="col-md-4 canvas-container">
+				<canvas id="canvas"></canvas>
 			</div>
 		</div>
 	</div>
 
 	<script>
-		var socket = io.connect();
-		var presets = {
-		};
-
-		(function() {
-		  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-									  window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-		  window.requestAnimationFrame = requestAnimationFrame;
-		})();
-
-		var Display = function() {
-			this.init();
-		};
-
-		Display.prototype = {
-			container: null,
-
-			display: null,
-			// the animation being shown/edited right now
-			theAnim: null,
-			// the actual animation instance
-			currentAnim: null,
-
-			// the codemirror editor
-			codeEditor: null,
-
-			init: function() {
-
-				this.leds = [];
-
-				this.initScene();
-				this.addListeners();
-				// create the dome object to represent our dome and its leds
-
-				this.resizeContainer();
-				this.onUpdate();
-
-				this.initEditor();
-
-				var that = this;
-				socket.on('reconnect', function() {
-					that.updateServerSettings();
-				});
-				socket.on('initDisplay', function(data) {
-					that.initDisplay(data);
-				});
-				socket.on('playlist', function(data) {
-					that.playlist(data);
-				});
-				socket.on('update', function (data) {
-					// loop over data and update led info
-					for (var i=0; i < that.leds.length; i++) {
-						var index = i*3,
-							led = that.leds[i];
-						led.r = data[index];
-						led.g = data[index+1];
-						led.b = data[index+2];
-					}
-				});
-
-				// initialize settings to nothing
-				this.settings = {};
-				// events for setting and updating gui state
-				socket.on('settings', function(data) {
-					that.initGUI(data);
-				});
-				socket.on('animation-change', function(animName) {
-					that.onAnimationChange(animName);
-				})
-			},
-			initDisplay: function(config) {
-				this.leds = [];
-				// initialize
-				this.LED_ROWS = config.rows;
-				this.LED_COLS = config.cols;
-				this.MAX_LEDS = this.LED_ROWS*this.LED_COLS;
-				this.ratio = config.cols/config.rows;
-
-				for (var i=0; i < this.MAX_LEDS; i++) {
-					this.leds.push({r: 0, g: 0, b: 0});
-				}
-				this.resizeContainer();
-			},
-			initEditor: function() {
-				var editor = ace.edit("editor");
-			    editor.setTheme("ace/theme/monokai");
-			    editor.getSession().setMode("ace/mode/javascript");
-			    this.codeEditor = editor;
-			},
-			playlist: function(list) {
-				// update playlist in UI
-			},
-			onAnimationChange: function(animName) {
-				$('#animationName').text(animName);
-			},
-			updateGUI: function() {
-				var gui = this.gui;
-				// Iterate over all controllers
-				for (var i in gui.__controllers) {
-					gui.__controllers[i].updateDisplay();
-				}
-			},
-			nextAnim: function() {
-				socket.emit('nextAnim');
-			},
-			updateServerSettings: function() {
-
-				// Iterate over all controllers
-				var gui = this.gui;
-				for (var i in gui.__controllers) {
-					var val = gui.__controllers[i].getValue();
-					if (gui.__controllers[i].__onChange) {
-						gui.__controllers[i].__onChange(val);	
-					}
-				}
-				for (var i in gui.__folders) {
-					var folder = gui.__folders[i];
-
-					for (var i in folder.__controllers) {
-						var val = folder.__controllers[i].getValue();
-						if (folder.__controllers[i].__onChange) {
-							folder.__controllers[i].__onChange(val);	
-						}
-					}
-				}
-			},
-			initGUI: function(settings) {
-				// store it for later reference
-				$.extend(true, this.settings, settings);
-
-				if (this.gui) {
-					// don't create the gui twice...just do an update
-					this.updateGUI();
-					return;
-				}
-
-				// setup gui
-				var gui = new dat.GUI({load:presets}),
-					c = null,
-					that = this;
-				this.gui = gui;
-
-				// loop over anims and create gui for them
-				var animsList = gui.addFolder('Animations');
-
-				gui.remember(settings.animations);
-
-				for(var animName in settings.animations) {
-					c = animsList.add(settings.animations, animName);
-					c.onChange(function(value) {
-						if (value) {
-							socket.emit('animation-activate', this.property);
-						} else {
-							socket.emit('animation-deactivate', this.property);
-						}
-					});
-				}
-
-				gui.remember(settings.animation);
-				gui.remember(settings.transition);
-
-				var animSettings = gui.addFolder('Animation Settings');
-				c = animSettings.add(settings.animation, 'durationMin', 3, 120);
-				c.onChange(function(value) {
-					socket.emit('settings', { animation: { durationMin: value } });
-				});
-				c = animSettings.add(settings.animation, 'durationMax', 3, 300);
-				c.onChange(function(value) {
-					socket.emit('settings', { animation: { durationMax: value } });
-					return value;
-				});
-
-
-				var transitionSettings = gui.addFolder('Transition Settings');
-				c = transitionSettings.add(settings.transition, 'durationMin', 0.5, 10);
-				c.onChange(function(value) {
-					socket.emit('settings', { transition: { durationMin: value } });
-					return value;
-				});
-				c = transitionSettings.add(settings.transition, 'durationMax', 0.5, 30);
-				c.onChange(function(value) {
-					socket.emit('settings', { transition: { durationMax: value } });
-					return value;
-				});
-
-				var colorBalance = gui.addFolder('Color Balance');
-				c = colorBalance.add(settings.colorBalance, 'red', 0, 1.0);
-				c.onChange(function(value) {
-					socket.emit('settings', { colorBalance: { red: value } });
-					return value;
-				});
-				c = colorBalance.add(settings.colorBalance, 'green', 0, 1.0);
-				c.onChange(function(value) {
-					socket.emit('settings', { colorBalance: { green: value } });
-					return value;
-				});
-				c = colorBalance.add(settings.colorBalance, 'blue', 0, 1.0);
-				c.onChange(function(value) {
-					socket.emit('settings', { colorBalance: { blue: value } });
-					return value;
-				});
-
-				c = gui.add(settings, 'speedFactor', 0.01, 3);
-				c.onChange(function(value) {
-					socket.emit('settings', { speedFactor: value });
-					return value;
-				});
-
-				gui.add(this, 'nextAnim');
-				// trigger updates on all values
-				this.updateServerSettings();
-
-				// hook up listener to fire reset index event after preset change
-				$('.dg .save-row select').on('change', function(ev) {
-					socket.emit('reset-index');
-				});
-			},
-			resizeContainer: function() {
-				this.canvas.width('100%');
-				var width = this.canvas.width();
-				var height = Math.round(width / 1.5);
-				var maxHeight =  parseInt(this.canvas.css('max-height'),10);
-				if (height > maxHeight) {
-					height = maxHeight;
-					// recalculate width
-					width = Math.round(height * 1.5);
-					this.canvas.width(width);
-				}
-				this.canvas.height(height);
-				this.canvas.attr('width', width);
-				this.canvas.attr('height', height);
-				// calculate spacing for LEDs
-				var ledW = width / this.LED_COLS;
-				var ledH = height / this.LED_ROWS;
-				this.ledSize = Math.min(ledW,ledH);
-				this.xOffset = (width - this.ledSize*this.LED_COLS)/2;
-				this.yOffset = (height - this.ledSize*this.LED_ROWS)/2;
-			},
-			onWindowResize: function() {
-				this.resizeContainer();
-				var width = this.canvas.width();
-				var height = this.canvas.height();
-
-				this.halfX = width / 2;
-				this.halfY = height / 2;
-			},
-			initScene: function() {
-
-				this.canvas = $('#canvas');
-			},
-			createLEDS: function() {
-				// calculate width/height of canvas
-				var width = this.canvas.width();
-				var height = this.canvas.height();
-
-				// calculate offset to indent LEDs
-				var offsetX = Math.round((width / 12)/2);
-				var offsetY = Math.round((height / 8)/2);
-				var gapX = Math.round(width/12);
-				var gapY = Math.round(height/8);
-				var radius = (Math.round(width / 12)/2)*1.5;
-
-				if (this.ledObjects) {
-					for (var i=0; i < this.ledObjects.length; i++) {
-						this.ledObjects[i].remove();
-					}
-				}
-
-				this.ledObjects = [];
-				for (var i=0; i < this.leds.length; i++) {
-					var x = i%12;
-					var y = Math.floor(i/12);
-					var posX = offsetX + (gapX*x);
-					var posY = offsetY + (gapY*y);
-
-					var led = new paper.Path.Circle({
-						center: [posX,posY],
-						radius: radius
-					});
-					led.fillColor = {
-						gradient: {
-							stops: [
-								{red: 0, green: 0, blue: 0},
-								{red: 0, green: 0, blue: 0}
-							],
-							radial: true
-						},
-						origin: led.position,
-						destination: led.bounds.rightCenter
-					};
-
-					this.ledObjects.push(led);
-				}
-			},
-			addListeners: function() {
-				$(window).on('resize', $.proxy(this.onWindowResize, this));
-			},
-			
-			onUpdate: function() {
-				this.render();
-				requestAnimationFrame($.proxy(this.onUpdate,this));
-			},
-
-			render: function() {
-				if (!this.leds || this.leds.length <= 0) {
-					return;
-				}
-
-				var canvas = this.canvas[0];
-				var ctx = canvas.getContext('2d');
-				ctx.globalCompositeOperation = 'screen';
-
-				// Use the identity matrix while clearing the canvas
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-				for (var i=0; i < this.leds.length; i++) {
-					// figure out coordinates of this led
-					var ledX = i%this.LED_COLS,
-						ledY = Math.floor(i/this.LED_COLS),
-						x = this.xOffset + (ledX*this.ledSize) +this.ledSize/2,
-						y = this.yOffset + (ledY*this.ledSize) +this.ledSize/2;
-					var gradient = ctx.createRadialGradient(x,y,0, x,y,this.ledSize);
-
-					var col = this.leds[i];
-					var colString = "rgba(" + col.r + "," + col.g + "," + col.b + ",1)";
-					gradient.addColorStop(0, colString);
-					gradient.addColorStop(0.1, colString);
-					colString = "rgba(" + col.r + "," + col.g + "," + col.b + ",0)";
-					gradient.addColorStop(1, colString);
-					ctx.fillStyle = gradient;
-					ctx.beginPath();
-					ctx.arc(x,y,this.ledSize, 0, Math.PI*2, true); 
-					ctx.closePath();
-					ctx.fill();
-				}				
-			}
-		};
-
 		window.onload = function() {
-		  var editor = new Display();
+		  var display = new Display();
+		  var editor = new Editor(display);
 		};
 	</script>
 </body>

@@ -5,8 +5,9 @@ var RandomSelector = function(anims) {
 
 RandomSelector.prototype = {
 	select: function() {
-		var index = Math.round(Math.random()*(this.anims.length-1));
-		return this.anims[index];
+		var anims = this.anims.list();
+		var index = Math.round(Math.random()*(anims.length-1));
+		return this.anims.get(anims[index]);
 	}
 };
 
