@@ -91,19 +91,24 @@ extend(Controller.prototype, {
 			});
 			socket.on('save-anim', function(data) {
 				// save data to drive
-				var filename = data.filename;
+				var timestamp = data.filename;
+				var filename = timestamp;
 				if (!filename) {
 					filename = 'anims/' + new Date().getTime() + '.js';
 				} else {
 					filename = 'anims/' + filename;
 				}
-				// write to disk
-				fs.writeFile(filename, JSON.stringify(data), function(err) {
-					socket.emit('anim-saved', data);
-					// update animations class
-					var anim = that.animations.set(filename, data);
-					that.animator.next(anim);
-				});
+				var anim = that.animations.set(timestamp, data);
+				if (anim) {
+					// write to disk
+					fs.writeFile(filename, JSON.stringify(data), function(err) {
+						socket.emit('anim-saved', data);
+						// update animations class
+						that.animator.next(anim);
+					});
+				} else {
+					socket.emit('anim-error','Invalid javascript!');
+				}
 			});
 
 			socket.on('play-animation', function(data) {

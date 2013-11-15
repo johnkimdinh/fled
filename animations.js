@@ -30,35 +30,45 @@ extend(Animations.prototype, {
 		return this.animsMap;
 	},
 	set: function(filename, data) {
-		var wrappedCode = "val = function() { " + data.code + " }",
-			script = vm.createScript(wrappedCode,filename);
+		try {
+			var wrappedCode = "val = function() { " + data.code + " }",
+				script = vm.createScript(wrappedCode,filename);
 
-		var animData = {
-			name: data.name,
-			code: data.code,
-			filename: filename,
-			script: script
-		};
-		this.animsMap[filename] = animData;
-		this.emit('change', this.animsMap);
-		return animData;
+			var animData = {
+				name: data.name,
+				code: data.code,
+				filename: filename,
+				script: script
+			};
+			this.animsMap[filename] = animData;
+			this.emit('change', this.animsMap);
+			return animData;
+		} catch (ex) {
+			console.log(ex.stack);
+			return null;
+		}
 	},
 	list: function() {
 		return this.anims;
 	},
 	add: function(data, filename) {
-		var wrappedCode = "val = function() { " + data.code + " }",
-			script = vm.createScript(wrappedCode,filename);
+		try {
+			var wrappedCode = "val = function() { " + data.code + " }",
+				script = vm.createScript(wrappedCode,filename);
 
-		var animData = {
-			name: data.name,
-			code: data.code,
-			filename: filename,
-			script: script
-		};
-		this.anims.push(filename);
-		this.animsMap[filename] = animData;
-		this.emit('change', this.animsMap);
+			var animData = {
+				name: data.name,
+				code: data.code,
+				filename: filename,
+				script: script
+			};
+			this.anims.push(filename);
+			this.animsMap[filename] = animData;
+			this.emit('change', this.animsMap);
+		} catch (ex) {
+			console.log(ex.stack);
+			return null;
+		}
 	}
 });
 
