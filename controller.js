@@ -49,6 +49,7 @@ extend(Controller.prototype, {
 
 		child.on('message', function(data) {
 			that.data = data;
+			that.emit('data-change', that.data);
 		});
 
 		this.server = server;
