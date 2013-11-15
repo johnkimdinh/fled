@@ -46,6 +46,13 @@ extend(Controller.prototype, {
 			res.json(that.data);
 		});
 
+		// launch data harvester
+		var child = require('child_process').fork('data-harvest.js');
+
+		child.on('message', function(data) {
+			that.data = data;
+		});
+
 		this.server = server;
 		this.io = io;
 		this.app = app;
