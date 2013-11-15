@@ -9,7 +9,10 @@ Editor.prototype = {
 	    editor.getSession().setMode("ace/mode/javascript");
 	    this.codeEditor = editor;
 
-	    var animName = decodeURIComponent((new RegExp('[?|&]anim=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;;
+	    var animName = decodeURIComponent((new RegExp('[?|&]anim=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+	    if (animName) {
+	    	socket.emit('get-anim', animName);
+	    }
 	    socket.on('anim-data', function(data) {
 	    	// update ui
 	    	$('#animName').val(data.name);
@@ -17,7 +20,6 @@ Editor.prototype = {
 	    	$('#filename').text(data.filename);
 	    	editor.setValue(data.code);
 	    });
-	    socket.emit('get-anim', animName);
 	    socket.on('data', function(data) {
 	    	$('#data .json-data').text(JSON.stringify(data, undefined, 2));
 	    });

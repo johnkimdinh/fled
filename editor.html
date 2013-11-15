@@ -44,6 +44,9 @@
 				overflow: auto;
 				overflow-y: scroll;
 			}
+			#filename { 
+				display: none;
+			}
 			.code-container {
 				position: relative;
 			}
@@ -65,13 +68,13 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 			    </button>
-				<a class="navbar-brand" href="#">FLED</a>
+				<a class="navbar-brand" href="/">FLED</a>
 			</div>
 			<div class="collapse navbar-collapse" id="navbar-collapse">
 				<h4 id="filename"></h4>
 			    <form id="saveForm" class="navbar-form navbar-right" role="edit">
 			      <div class="form-group">
-			        <input id="animName" type="text" class="form-control" placeholder="Anim Name">
+			        <input id="animName" type="text" class="form-control" placeholder="Give it a name!">
 			      </div>
 			      <div class="form-group">
 			        <input id="author" type="text" class="form-control" placeholder="Who R U?">
@@ -87,10 +90,39 @@
 					<li><a href="#data" data-toggle="tab">Data</a></li>
 				</ul>
 				<div class="tab-content">
-					<div class="tab-pane active" id="editor">
-						<ul class="list-group">
-						</ul>
-					</div>
+					<div class="tab-pane active" id="editor">// example code, renders a basic rainbow
+var tweenedValues = {
+	hue: 0
+};
+
+return {
+	init: function(display,timeline) {
+		this.display = display;
+
+      	display.tween(tweenedValues,{
+          to: {hue: 1},
+          duration: 5000,
+          repeat: Infinity,
+          yoyo: true,
+          delay: 0,
+          easing: TWEEN.Easing.Cubic.InOut
+        });
+	},
+	onUpdate: function(display, data) {
+		var c = null;
+
+		for (var i=0; i &lt; display.leds.length; i++) {
+			var x = i%display.cols,
+				y = Math.floor(i/display.cols);
+			c = new Color(0x0);
+			var h = ((tweenedValues.hue) + (x/display.cols))%1,
+				s = 1,
+				l = 0.5;
+			c.setHSL(h,s,l);
+			display.setColor(i, c);
+		}
+	}
+};</div>
 					<div class="tab-pane" id="data">
 						<pre class="json-data">
 						</pre>
