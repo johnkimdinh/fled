@@ -159,7 +159,7 @@ extend(Controller.prototype, {
 		if (!this.io) {
 			return;
 		}
-		this.io.sockets.emit('update', buffer.toJSON());
+		this.io.sockets.emit('update', buffer);
 	}
 });
 module.exports = Controller;

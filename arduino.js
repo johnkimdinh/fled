@@ -54,7 +54,7 @@ Arduino.prototype = {
 			var serialPort = new SerialPort(port, {
 				baudrate: 115200,
 				parser: serialport.parsers.readline("\n") 
-			});
+			},false);
 			var oldNumber = 0;
 			serialPort.once("open", function () {
 				setTimeout(function() {
@@ -83,6 +83,13 @@ Arduino.prototype = {
 				that.serialPort = null;
 				console.log('error: error on serial port : ' + err);
 				that.setConnectTimeout();
+			});
+			serialPort.open(function(err) {
+				if (err) {
+					console.log('Error opening serialport : ' + err);
+					process.exit(1);
+					return;
+				}
 			});
 		});
 	},

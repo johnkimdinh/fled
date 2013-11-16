@@ -105,11 +105,18 @@ var Display = function() {
 	this.ratio = this.cols/this.rows;
 	this.MAX_LEDS = this.rows*this.cols;
 
+	this.leds = [];
+	
+	for (var i=0; i < this.MAX_LEDS; i++) {
+		var c =  new Color(0x0);
+		this.leds.push(c);
+	}
+
+
 	this.reset();
 };
 
 Display.prototype = {
-	leds: [],
 
 	playing: false,
 	tweens: [],
@@ -227,12 +234,6 @@ Display.prototype = {
 		// setup arrays of indices
 		
 		// initialise LED states to off
-		this.leds = [];
-		for (var i=0; i < this.MAX_LEDS; i++) {
-			var c =  new Color(0x0);
-			this.leds.push(c);
-		}
-
 		TWEEN.removeAll();
 
 		this.tweens = [];

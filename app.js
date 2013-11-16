@@ -22,8 +22,11 @@ var Arduino = require('./arduino'),
 var display = new Display();
 
 // create a buffer to hold our RGB data for streaming to clients
-var buffer = new Buffer(display.MAX_LEDS * 3);
-buffer.fill(0);
+var buffer = new Array();
+for (var i=0; i < display.MAX_LEDS * 3; i++) {
+	buffer[i] = 255;
+}
+//buffer.fill(0);
 
 // pass in buffer to animator
 animator = new Animator(buffer,display);

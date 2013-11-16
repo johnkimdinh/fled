@@ -132,9 +132,9 @@ extend(Animator.prototype, {
 			led.g = Math.max(0,led.g);
 			led.b = Math.max(0,led.b);
 			
-			ledBuffer[index] = led.r*255;
-			ledBuffer[index+1] = led.g*255;
-			ledBuffer[index+2] = led.b*255;
+			ledBuffer[index] = Math.round(led.r*255);
+			ledBuffer[index+1] = Math.round(led.g*255);
+			ledBuffer[index+2] = Math.round(led.b*255);
 		}
 
 		// TODO: if current anim doesn't provide touch implementation then apply touchData.filters here
