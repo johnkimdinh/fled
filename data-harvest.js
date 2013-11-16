@@ -13,6 +13,7 @@ app.use(express.bodyParser());
 server.listen(8081);
 
 var data = {};
+var changed = false;
 
 app.post('/data', function(req, res) {
 	var packet = req.body;
@@ -21,8 +22,14 @@ app.post('/data', function(req, res) {
 		data[packet.name] = {};
 	}
 	extend(data[packet.name], packet.data);
-
-	process.send(data);
-
+	changed = true;
 	res.json({success: 'ok'});
 });
+
+// set update interval timer
+setInterval(function() {
+	if (changed) {
+		process.send(data);
+		changed = false;
+	}
+}, 200);

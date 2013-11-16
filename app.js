@@ -11,7 +11,7 @@ var Arduino = require('./arduino'),
 	RandomSelector = require('./selectors/random'),
 	Display = require('./display'),
 	FRAME_RATE = 30,
-	intervalDelay = Math.floor(1000/FRAME_RATE),
+	intervalDelay = Math.max(Math.floor(1000/FRAME_RATE) - 5,10),
 	animator = null,
 	anims = null,
 	controller = null,
@@ -38,8 +38,7 @@ controller = new Controller({
 	animations: anims
 });
 
-// setup loop for driving this thing
-setInterval(function() {
+function nextFrame() {
 
 	animator.update(controller.data);
 
@@ -47,6 +46,11 @@ setInterval(function() {
 	
 	controller.send(buffer);
 
-},intervalDelay);
+//	setImmediate(nextFrame);
+}
+// setup loop for driving this thing
+//setImmediate(nextFrame);
+
+setInterval(nextFrame, intervalDelay);
 
 animator.play();

@@ -2,6 +2,9 @@
   "name": "fled",
   "version": "0.0.1",
   "description": "Fantastic LED",
+  "devDependencies": {
+    "request": "*"
+  },
   "dependencies": {
     "serialport": "git://github.com/voodootikigod/node-serialport.git",
     "socket.io": "~0.9.16",

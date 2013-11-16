@@ -9,8 +9,8 @@ SimpleFade.prototype = {
 	},
 
 	calculate: function(oldValues, newValues) {
-		var outValues = new Array(oldValues.length),
-			halfway = (this.complete*2) % 1,
+		//var outValues = new Array(oldValues.length),
+		var	halfway = (this.complete*2) % 1,
 			i = 0,
 			cloned = null;
 
@@ -18,17 +18,17 @@ SimpleFade.prototype = {
 			for (i=0; i < oldValues.length; i++) {
 				cloned = oldValues[i].clone();
 				cloned.multiplyScalar(1-halfway); // just use our complete value (0-1 for complete)
-				outValues[i] = cloned;
+				newValues[i] = cloned;
 			}
 		} else {
 			for (i=0; i < newValues.length; i++) {
 				cloned = newValues[i].clone();
 				cloned.multiplyScalar(halfway); // just use our complete value (0-1 for complete)
-				outValues[i] = cloned;
+				newValues[i] = cloned;
 			}
 		}
 		// ensure we return an array of led color info
-		return outValues;
+		return newValues;
 	}
 };
 

@@ -105,7 +105,7 @@ extend(Animator.prototype, {
 			leds = display.leds;
 
 		if (this.transition) {
-			leds = this.applyTransition(leds);
+			this.applyTransition(leds);
 		}
 
 		var index = 0, led = null;
