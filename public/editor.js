@@ -1,39 +1,60 @@
 var Editor = function() {
 	this.init();
-}
+};
 Editor.prototype = {
 	initEditor: function() {
 		var editor = ace.edit("editor");
-	    editor.setTheme("ace/theme/monokai");
-	    editor.getSession().setMode("ace/mode/javascript");
-	    this.editor = editor;
+		editor.setTheme("ace/theme/monokai");
+		editor.getSession().setMode("ace/mode/javascript");
+		this.editor = editor;
 	},
 	initSocket: function() {
 		var socket = io.connect();
-	    this.socket = socket;
-	    socket.on('anim-data', function(data) {
-	    	that.setAnim(data);
-	    });
-	    socket.on('anim-saved', function(data) {
-	    	that.setAnim(data);
-	    });
-	    var that = this;
-	    socket.on('data', function(data) {
-	    	$('#data .json-data').text(JSON.stringify(data, undefined, 2));
-	    	that.data = data;
-	    });
-	    var animName = decodeURIComponent((new RegExp('[?|&]anim=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
-	    if (animName) {
-	    	socket.emit('get-anim', animName);
-	    }
+		this.socket = socket;
+		socket.on('anim-data', function(data) {
+			that.setAnim(data);
+		});
+		socket.on('anim-saved', function(data) {
+			that.setAnim(data);
+		});
+		var that = this;
+		socket.on('data', function(data) {
+			$('#data .json-data').text(JSON.stringify(data, undefined, 2));
+			that.data = data;
+		});
+		var animName = decodeURIComponent((new RegExp('[?|&]anim=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+		if (animName) {
+			socket.emit('get-anim', animName);
+		}
+		socket.on('variables', function(variables) {
+			that.updateVariables(variables);
+		});
+		// request list of data variables
+		socket.emit('request-variables');
+	},
+	updateVariables: function(variables) {
+		// get template
+		var templateText = $('#variableTemplate').html();
+		var accordion = $('#variableAccordion');
+		accordion.empty();
+		for (var i=0; i < variables.length; i++) {
+			var variable = variables[i];
+			var entry = $(templateText);
+			var title = entry.find('.variable-title');
+			title.attr('href', '#variable_' + variable);
+			title.text(variable);
+			var panel = entry.find('#variable');
+			panel.attr('id', 'variable_' + variable);
+			accordion.append(entry);
+		}
 	},
 	setAnim: function(data) {
-    	// update ui
-    	$('#animName').val(data.name);
-    	$('#author').val(data.author);
-    	$('#filename').text(data.filename);
-    	$('#requiredData').val(JSON.stringify(data.required));
-    	this.editor.setValue(data.code);
+		// update ui
+		$('#animName').val(data.name);
+		$('#author').val(data.author);
+		$('#filename').text(data.filename);
+		$('#requiredData').val(JSON.stringify(data.required));
+		this.editor.setValue(data.code);
 	},
 	initDisplay: function() {
 		var display = new Display();
@@ -44,13 +65,13 @@ Editor.prototype = {
 	addListeners: function() {
 		var that = this;
 		$('#saveForm').on('submit', function(ev) {
-	    	ev.preventDefault();
-	    	that.onSave();
-	    });	
+			ev.preventDefault();
+			that.onSave();
+		});
 		$('#preview').on('click', function(ev) {
-	    	ev.preventDefault();
-	    	that.onPreview();
-	    });	
+			ev.preventDefault();
+			that.onPreview();
+		});
 	},
 	checkRequired: function() {
 		var required = this.parseRequiredData();
@@ -70,15 +91,15 @@ Editor.prototype = {
 	},
 	onPreview: function() {
 		if (this.animInterval) {
-    		clearInterval(this.animInterval);
-    		this.animInterval = null;
-    	}
+			clearInterval(this.animInterval);
+			this.animInterval = null;
+		}
 		if (!this.checkRequired()) {
-    		var el = $('#requiredData');
-  			el.clearQueue();
-    		el.css('background-color', '#FF9999');
-    		el.animate({'backgroundColor': '#FFFFFF'},2000);
-    		return;
+			var el = $('#requiredData');
+			el.clearQueue();
+			el.css('background-color', '#FF9999');
+			el.animate({'backgroundColor': '#FFFFFF'},2000);
+			return;
 		}
 		// load code, execute it
 		var code = this.editor.getValue();
@@ -96,7 +117,7 @@ Editor.prototype = {
 
 		var startTime = Date.now();
 		var that = this;
-    	// take code, execute it, update Preview window
+		// take code, execute it, update Preview window
 		this.animInterval = setInterval(function() {
 			var elapsed = Date.now() - startTime;
 			// update tweens and display state
@@ -142,39 +163,40 @@ Editor.prototype = {
 					throw Exception();
 				}
 			} catch(ex) {
-	    		var el = $('#requiredData');
-	  			el.clearQueue();
-	    		el.css('background-color', '#FF9999');
-	    		el.animate({'backgroundColor': '#FFFFFF'},2000);
-	    		return false;
+				var el = $('#requiredData');
+				el.clearQueue();
+				el.css('background-color', '#FF9999');
+				el.animate({'backgroundColor': '#FFFFFF'},2000);
+				return false;
 			}
 		}
 		return requiredData;
 	},
 	onSave: function() {
-    	var animName = $('#animName').val();
-    	var author = $('#author').val();
-    	var filename = $('#filename').text();
-    	if (!animName) {
-    		var el = $('#animName');
-  			el.clearQueue();
-    		el.css('background-color', '#FF9999');
-    		el.animate({'backgroundColor': '#FFFFFF'},2000);
-    		return;
-    	}
-    	if (!author) {
-    		var el = $('#author');
-    		el.clearQueue();
-    		el.css('background-color', '#FF9999');
-    		el.animate({'backgroundColor': '#FFFFFF'},2000);
-    		return;
-    	}
-    	// attempt to parse required data parameter
-    	var data = this.parseRequiredData();
-    	if (data===false) {
-    		return;
-    	}
-    	this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: data, code: this.editor.getValue()});
+		var animName = $('#animName').val();
+		var author = $('#author').val();
+		var filename = $('#filename').text();
+		var el = null;
+		if (!animName) {
+			el = $('#animName');
+			el.clearQueue();
+			el.css('background-color', '#FF9999');
+			el.animate({'backgroundColor': '#FFFFFF'},2000);
+			return;
+		}
+		if (!author) {
+			el = $('#author');
+			el.clearQueue();
+			el.css('background-color', '#FF9999');
+			el.animate({'backgroundColor': '#FFFFFF'},2000);
+			return;
+		}
+		// attempt to parse required data parameter
+		var data = this.parseRequiredData();
+		if (data===false) {
+			return;
+		}
+		this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: data, code: this.editor.getValue()});
 	},
 	init: function() {
 		this.initEditor();

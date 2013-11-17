@@ -5,13 +5,21 @@ var path = require('path'),
 	EventEmitter = require('events').EventEmitter,
 	express = require('express');
 
-var app = express(),
-	server = require('http').createServer(app);
+/*var app = express(),*/
+var server = require('http').createServer(function(req, res) {
+	var data = "";
 
-app.use(express.bodyParser());
-
-server.listen(8081);
-
+    req.on("data", function(chunk) {
+        data += chunk;
+    });
+    req.on('end', function() {
+    	var json = JSON.parse(data);
+    	console.log('Received : ' + JSON.stringify(json));
+    });
+    res.writeHead(200);
+    res.end(JSON.stringify({'success': 'ok'}));
+}).listen(8081);
+/*
 var data = {};
 var changed = false;
 
@@ -32,4 +40,4 @@ setInterval(function() {
 		process.send(data);
 		changed = false;
 	}
-}, 200);
+}, 200);*/

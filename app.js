@@ -22,7 +22,7 @@ var Arduino = require('./arduino'),
 var display = new Display();
 
 // create a buffer to hold our RGB data for streaming to clients
-var buffer = new Array();
+var buffer = [];
 for (var i=0; i < display.MAX_LEDS * 3; i++) {
 	buffer[i] = 255;
 }
@@ -38,7 +38,8 @@ arduino = new Arduino({ledCount:display.MAX_LEDS,animator:animator});
 controller = new Controller({
 	animator: animator,
 	playlist: playlist,
-	animations: anims
+	animations: anims,
+	buffer: buffer
 });
 
 function nextFrame() {
@@ -47,8 +48,6 @@ function nextFrame() {
 
 	arduino.send(buffer);
 	
-	controller.send(buffer);
-
 //	setImmediate(nextFrame);
 }
 // setup loop for driving this thing

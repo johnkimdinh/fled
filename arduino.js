@@ -103,6 +103,7 @@ Arduino.prototype = {
 		this.dataBuffer = new Buffer(this.ledCount*3);
 		this.sendCount = 0;
 
+		this.sendCountBuf = new Buffer(1);
 		// the physical arrangement of the LEDs
 		this.ledMap = [
 			0,	15,	16,	31,	32,	47,	48,	63,	64,	79,	80,	95,
@@ -121,11 +122,11 @@ Arduino.prototype = {
 			return;
 		}
 		try {
-			var that = this;
+			var that = this, index, realIndex;
 			// reorder buffer according to internal LED map
 			for (var i=0; i < this.ledCount; i++) {
-				var index = i*3;	
-				var realIndex = this.ledMap[i]*3;
+				index = i*3;	
+				realIndex = this.ledMap[i]*3;
 				this.dataBuffer[realIndex] = Math.round((buffer[index]/255)*254);
 				this.dataBuffer[realIndex+1] = Math.round((buffer[index+1]/255)*254);
 				this.dataBuffer[realIndex+2] = Math.round((buffer[index+2]/255)*254);
@@ -138,9 +139,8 @@ Arduino.prototype = {
 					that.setConnectTimeout();
 				}
 			});
-			var sendCountBuf = new Buffer(1);
-			sendCountBuf[0] = this.sendCount % 255;
-			this.serialPort.write(sendCountBuf);
+			this.sendCountBuf[0] = this.sendCount % 255;
+			this.serialPort.write(this.sendCountBuf);
 
 			this.serialPort.write(this.dataBuffer, function(err, results) {
 				if (err) {

@@ -3,6 +3,7 @@ var path = require('path'),
 	fs = require('fs'),
 	extend = require('extend'),
 	EventEmitter = require('events').EventEmitter,
+	Memcached = require('memcached'),
 	express = require('express');
 
 var Controller = function(options) {
@@ -22,6 +23,9 @@ extend(Controller.prototype, {
 		this.animator = options.animator;
 		this.animations = options.animations;
 		this.playlist = options.playlist;
+		this.buffer = options.buffer;
+
+		this.cache = new Memcached('localhost:11211');
 
 		server.listen(8080);
 
@@ -35,21 +39,6 @@ extend(Controller.prototype, {
 		});
 		app.get('/edit', function (req, res) {
 			res.sendfile(__dirname + '/editor.html');
-		});
-		app.post('/data', function(req, res) {
-			that.addData(req.body);
-			res.json({success: 'ok'});
-		});
-		app.get('/data', function(req, res) {
-			res.json(that.data);
-		});
-
-		// launch data harvester
-		var child = require('child_process').fork('data-harvest.js');
-
-		child.on('message', function(data) {
-			that.data = data;
-			that.emit('data-change', that.data);
 		});
 
 		this.server = server;
@@ -77,23 +66,43 @@ extend(Controller.prototype, {
 			},
 			onDataChange: function(data) {
 				io.sockets.emit('data', data);
+			},
+			onUpdate: function(buffer) {
+				io.sockets.emit('update',buffer);
 			}
 		};
 		that.playlist.on('change', client.onPlaylistChange);
 		that.animator.on('animation-change', client.onAnimationChange);
 		that.animations.on('change', client.onAnimations);
-		that.on('data-change', client.onDataChange);
+		//that.on('data-change', client.onDataChange);
+
+		// setup 30fps only timer to update clients all together if necessary
+		setInterval(function() {
+			client.onDataChange(that.data);
+		},100);
+		setInterval(function() {
+			client.onUpdate(that.buffer);
+		},33);
 
 		io.sockets.on('connection', function (socket) {
 			socket.emit('initDisplay', that.animator.display.config);
 			// initialize state
 			socket.emit('playlist', that.playlist.getList());
 			socket.emit('animations', that.animations.get());
-			socket.emit('data', that.data);
 
 			socket.on('get-anim', function(name) {
 				var anim = that.animations.get(name);
 				socket.emit('anim-data', anim);
+			});
+			socket.on('request-variables', function() {
+				// fetch variables from db
+				that.cache.get('variables', function(err, data) {
+					if (err) {
+						console.log('Error retrieving variables from memcache : ' + err);
+						return;
+					}
+					socket.emit('variables', data);
+				});
 			});
 			socket.on('save-anim', function(data) {
 				// save data to drive

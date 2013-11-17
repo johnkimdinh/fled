@@ -128,8 +128,8 @@ return {
 	}
 };</div>
 					<div class="tab-pane" id="data">
-						<pre class="json-data">
-						</pre>
+						<div class="panel-group" id="variableAccordion">
+						</div>
 					</div>
 				</div>
 			</div>
@@ -156,6 +156,21 @@ return {
 		window.onload = function() {
 		  var editor = new Editor();
 		};
+	</script>
+	<script type="text/template" id="variableTemplate">
+	  <div class="panel panel-default">
+	    <div class="panel-heading">
+	      <h4 class="panel-title">
+	        <a data-toggle="collapse" data-parent="#variableAccordion" href="#variable" class="variable-title"></a>
+	      </h4>
+	    </div>
+	    <div id="variable" class="panel-collapse collapse in">
+	      <div class="panel-body">
+			<pre class="json-data variable-content">
+			</pre>
+		  </div>
+	    </div>
+	  </div>
 	</script>
 </body>
 </html>
