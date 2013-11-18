@@ -65,6 +65,9 @@ extend(Controller.prototype, {
 			onDataChange: function(data) {
 				io.sockets.emit('data', data);
 			},
+			onVariableChange: function(data) {
+				io.sockets.emit('variables', data);
+			},
 			onUpdate: function(buffer) {
 				io.sockets.emit('update',buffer);
 			}
@@ -72,6 +75,8 @@ extend(Controller.prototype, {
 		that.playlist.on('change', client.onPlaylistChange);
 		that.animator.on('animation-change', client.onAnimationChange);
 		that.animations.on('change', client.onAnimations);
+		that.data.on('data', client.onDataChange);
+		that.data.on('variables', client.onVariableChange);
 		//that.on('data-change', client.onDataChange);
 
 		// setup 30fps only timer to update clients all together if necessary
@@ -82,16 +87,6 @@ extend(Controller.prototype, {
 			client.onUpdate(that.buffer);
 		},33);
 
-		// fetch data from cache on an interval
-		setInterval(function() {
-			that.data.list(function(err, data) {
-				if (err) {
-					console.log('Error retrieving variables from memcache : ' + err);
-					return;
-				}
-				io.sockets.emit('variables', data);
-			});
-		},1000);
 		io.sockets.on('connection', function (socket) {
 			socket.emit('initDisplay', that.animator.display.config);
 			// initialize state
@@ -154,8 +149,8 @@ extend(Controller.prototype, {
 			});
 			socket.on('disconnect', function() {
 				var rooms = io.sockets.manager.roomClients[socket.id];
-				for (var i=0; i < rooms.length; i++) {
-					var variable = rooms[i].substr(1);
+				for (var room in rooms) {
+					var variable = room.substr(1);
 					that.data.unsubscribe(variable);
 				}
 				console.log('Client disconnected');

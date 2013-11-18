@@ -52,7 +52,7 @@ extend(Data.prototype, {
 					data[key] = JSON.parse(data[key]);
 				}
 				that.data = data;
-				that.emit('data-updated', data);
+				that.emit('data', data);
 			});
 		},100);
 		this.variableInterval = setInterval(function() {
@@ -61,8 +61,18 @@ extend(Data.prototype, {
 					console.log('Error retrieving variables list from memcache : ' + err);
 					return;
 				}
-				data = JSON.parse("[" + data + "]");
-				that.variables = data;
+				var isChanged = data.length != that.variables.length;
+				if (!isChanged) {
+					for (var i=0; i < data.length; i++) {
+						if (data[i]!=that.variables[i]) {
+							isChanged = true;
+						}
+					}
+				}
+				if (isChanged) {
+					that.variables = data;
+					that.emit('variables', data);
+				}
 			});
 		},1000);
 	},
@@ -85,7 +95,7 @@ extend(Data.prototype, {
 			this.variables.push(name);
 		}
 		console.log('Storing variable list : ' + JSON.stringify(this.variables));
-		this.cache.set('variables', JSON.stringify(this.variables),0, function(err, result) {
+		this.cache.set('variables', this.variables,0, function(err, result) {
 			console.log('Added data variable : ' + name + ' : ' + result);
 		});
 	},
@@ -96,7 +106,6 @@ extend(Data.prototype, {
 				callback(err);
 				return;
 			}
-			data = JSON.parse("[" + data + "]");
 			callback(err, data);
 		});
 	}
