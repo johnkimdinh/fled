@@ -87,7 +87,7 @@ Arduino.prototype = {
 			serialPort.open(function(err) {
 				if (err) {
 					console.log('Error opening serialport : ' + err);
-					process.exit(1);
+					//process.exit(1);
 					return;
 				}
 			});

@@ -33,13 +33,13 @@ extend(Controller.prototype, {
 
 		this.data = {};
 
-		app.use(express.static(path.join(__dirname, 'public')));
+		/*app.use(express.static(path.join(__dirname, 'public')));
 		app.get('/', function (req, res) {
 			res.sendfile(__dirname + '/index.html');
 		});
 		app.get('/edit', function (req, res) {
 			res.sendfile(__dirname + '/editor.html');
-		});
+		});*/
 
 		this.server = server;
 		this.io = io;
@@ -101,6 +101,7 @@ extend(Controller.prototype, {
 						console.log('Error retrieving variables from memcache : ' + err);
 						return;
 					}
+					data = JSON.parse("[" + data + "]");
 					socket.emit('variables', data);
 				});
 			});

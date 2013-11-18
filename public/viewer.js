@@ -187,7 +187,7 @@ Viewer.prototype = {
 		$('#animations .list-group').on('click', '.edit-button', function(ev) {
 			var item = $(ev.target).closest('li');
 			var anim = item.data('anim');
-			window.location = '/edit?anim=' + encodeURIComponent(anim.filename);
+			window.location = '/edit.html?anim=' + encodeURIComponent(anim.filename);
 		});
 		$('#animations .list-group').on('click', '.play-button', function(ev) {
 			var item = $(ev.target).closest('li');
