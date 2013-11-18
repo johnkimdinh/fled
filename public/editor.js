@@ -11,6 +11,13 @@ Editor.prototype = {
 	initSocket: function() {
 		var socket = io.connect();
 		this.socket = socket;
+		// setup listeners for global variables
+		socket.on('variables', function(variables) {
+			that.updateVariables(variables);
+		});
+		// request list of data variables
+		socket.emit('request-variables');
+
 		socket.on('anim-data', function(data) {
 			that.setAnim(data);
 		});
@@ -19,42 +26,70 @@ Editor.prototype = {
 		});
 		var that = this;
 		socket.on('data', function(data) {
-			$('#data .json-data').text(JSON.stringify(data, undefined, 2));
+			// update UI
+			for (var variable in data) {
+				$('#variable_' + variable).find('.json-data').text(JSON.stringify(data, undefined, 2));
+			}
 			that.data = data;
 		});
+		
 		var animName = decodeURIComponent((new RegExp('[?|&]anim=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
 		if (animName) {
 			socket.emit('get-anim', animName);
 		}
-		socket.on('variables', function(variables) {
-			that.updateVariables(variables);
-		});
-		// request list of data variables
-		socket.emit('request-variables');
 	},
-	updateVariables: function(variables) {
-		// get template
-		var templateText = $('#variableTemplate').html();
-		var accordion = $('#variableAccordion');
-		accordion.empty();
-		for (var i=0; i < variables.length; i++) {
-			var variable = variables[i];
-			var entry = $(templateText);
-			var title = entry.find('.variable-title');
-			title.attr('href', '#variable_' + variable);
-			title.text(variable);
-			var panel = entry.find('#variable');
-			panel.attr('id', 'variable_' + variable);
-			accordion.append(entry);
+	updateUI: function() {
+		// update variable ui
+		if (this.variables) {
+			var templateText = $('#variableTemplate').html();
+			var accordion = $('#variableAccordion');
+			accordion.empty();
+			var variables = this.variables;
+			for (var i=0; i < variables.length; i++) {
+				var variable = variables[i];
+				var entry = $(templateText);
+				var title = entry.find('.variable-title');
+				title.attr('href', '#variable_' + variable);
+				title.text(variable);
+				title.data('variable', variable);
+				var panel = entry.find('#variable');
+				panel.attr('id', 'variable_' + variable);
+				accordion.append(entry);
+				title.data('required', false);
+				if (this.anim) {
+					if (this.anim.required[variable]) {
+						entry.find('.variable-required').attr('checked', 'checked');
+						title.data('required', true);
+					}
+				}
+			}
+		}
+		if (this.anim) {
+			// update ui
+			$('#animName').val(this.anim.name);
+			$('#author').val(this.anim.author);
+			$('#filename').text(this.anim.filename);
+			this.editor.setValue(this.anim.code);
 		}
 	},
+	subscribeVariables: function() {
+		var required = this.anim.required;
+		for (var variable in required) {
+			if (!required.hasOwnProperty(variable)) {
+				continue;
+			}
+
+			this.socket.emit('variable-subscribe', variable);
+		}
+	},
+	updateVariables: function(variables) {
+		this.variables = variables;
+		this.updateUI();
+	},
 	setAnim: function(data) {
-		// update ui
-		$('#animName').val(data.name);
-		$('#author').val(data.author);
-		$('#filename').text(data.filename);
-		$('#requiredData').val(JSON.stringify(data.required));
-		this.editor.setValue(data.code);
+		this.anim = data;
+		this.subscribeVariables();
+		this.updateUI();
 	},
 	initDisplay: function() {
 		var display = new Display();
@@ -72,34 +107,27 @@ Editor.prototype = {
 			ev.preventDefault();
 			that.onPreview();
 		});
-	},
-	checkRequired: function() {
-		var required = this.parseRequiredData();
-		for (var i=0; i < required.length; i++) {
-			var requiredString = required[i];
-			// split into paths and check on data object
-			var paths = requiredString.split('.');
-			var obj = this.data;
-			for (var j=0; j < paths.length; j++) {
-				if (typeof obj[paths[j]] === 'undefined') {
-					return false;
-				}
-				obj = obj[paths[j]];
+		$('#variableAccordion').on('change','.variable-required', function(ev) {
+			var variablePanel = $(ev.target).closest('.panel');
+			var variableTitle = variablePanel.find('.variable-title');
+			var checked = $(ev.target).is(':checked');
+			variableTitle.data('required', checked);
+			var name = variableTitle.data('variable');
+			if (checked) {
+				that.anim.required[name] = true;
+				that.socket.emit('variable-subscribe', name);
+			} else {
+				that.anim.required[name] = null;
+				delete that.anim.required[name];
+				// unsubscribe
+				that.socket.emit('variable-unsubscribe', name);
 			}
-		}
-		return true;
+		});
 	},
 	onPreview: function() {
 		if (this.animInterval) {
 			clearInterval(this.animInterval);
 			this.animInterval = null;
-		}
-		if (!this.checkRequired()) {
-			var el = $('#requiredData');
-			el.clearQueue();
-			el.css('background-color', '#FF9999');
-			el.animate({'backgroundColor': '#FFFFFF'},2000);
-			return;
 		}
 		// load code, execute it
 		var code = this.editor.getValue();
@@ -109,6 +137,10 @@ Editor.prototype = {
 		try {
 			anim = eval(wrappedCode)();
 		} catch (ex) {
+			var el = $('#preview');
+			el.clearQueue();
+			el.css('background-color', '#FF9999');
+			el.animate({'backgroundColor': '#EBEBEB'},2000);
 			console.log('Error: ' + ex.stack);
 			return;
 		}
@@ -152,26 +184,6 @@ Editor.prototype = {
 
 		this.display.play();
 	},
-	parseRequiredData: function() {
-		var data = $('#requiredData').val();
-		var requiredData = [];
-		if (data!=='') {
-			try {
-				data = data.replace(/'/g, '"');
-				requiredData = JSON.parse(data);
-				if ( Object.prototype.toString.call( requiredData ) !== '[object Array]') {
-					throw Exception();
-				}
-			} catch(ex) {
-				var el = $('#requiredData');
-				el.clearQueue();
-				el.css('background-color', '#FF9999');
-				el.animate({'backgroundColor': '#FFFFFF'},2000);
-				return false;
-			}
-		}
-		return requiredData;
-	},
 	onSave: function() {
 		var animName = $('#animName').val();
 		var author = $('#author').val();
@@ -191,14 +203,11 @@ Editor.prototype = {
 			el.animate({'backgroundColor': '#FFFFFF'},2000);
 			return;
 		}
-		// attempt to parse required data parameter
-		var data = this.parseRequiredData();
-		if (data===false) {
-			return;
-		}
-		this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: data, code: this.editor.getValue()});
+		this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: this.anim.required, code: this.editor.getValue()});
 	},
 	init: function() {
+		this.anim = {name: '', author: '', required: {}};
+		
 		this.initEditor();
 		
 		this.initSocket();

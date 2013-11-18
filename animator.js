@@ -202,20 +202,12 @@ extend(Animator.prototype, {
 		var idx = Math.floor(Math.random()*this.transitions.length);
 		return this.transitions[idx];
 	},
-	checkAnimationRequired: function(anim, data) {
+	checkAnimationRequired: function(anim) {
 		if (anim.required) {
 			var required = anim.required;
-			for (var i=0; i < required.length; i++) {
-				var requiredString = required[i];
-				// split into paths and check on data object
-				var paths = requiredString.split('.');
-				var obj = data;
-				for (var j=0; j < paths.length; j++) {
-					if (typeof obj[paths[j]] === 'undefined') {
-						console.log('Animation rejected missing data : ' + requiredString);
-						return false;
-					}
-					obj = obj[paths[j]];
+			for (var variable in required) {
+				if (!this.data.available(variable)) {
+					return false;
 				}
 			}
 			return true;
@@ -223,15 +215,37 @@ extend(Animator.prototype, {
 
 		return true;
 	},
+	unsubscribeVariables: function(anim) {
+		if (anim.required) {
+			var required = anim.required;
+			for (var variable in required) {
+				this.data.unsubscribe(variable);
+			}
+		}
+	},
+	subscribeVariables: function(anim) {
+		if (anim.required) {
+			var required = anim.required;
+			for (var variable in required) {
+				this.data.subscribe(variable);
+			}
+		}
+	},
+
 	next: function(anim, data) {
 		// check the anim, see if we can play it
-		if (!this.checkAnimationRequired(anim, data)) {
+		if (!this.checkAnimationRequired(anim)) {
 			this.emit('animation-needs-data', anim);
 			this.emit('animation-finished',this);
 			return;
 		}
 		this.startTime = Date.now();
 		this.display.cleanAnimation();
+
+		// unsubscribe old animation
+		if (this.anim) {
+			this.unsubscribeVariables(this.anim);
+		}
 		
 		this.currentAnim = anim.script.runInNewContext({
 			Display: Display,
@@ -240,7 +254,8 @@ extend(Animator.prototype, {
 			$: $,
 			console: console
 		})(); // execute the script to get the anim module all setup
-
+		this.anim = anim;
+		this.subscribeVariables(anim);
 
 		var Transition = this.pickTransition();
 		// setup transition
@@ -281,6 +296,9 @@ extend(Animator.prototype, {
 			s: s,
 			l: l
 		};
+	},
+	setData: function(data) {
+		this.data = data;
 	}
 });
 
