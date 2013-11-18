@@ -204,6 +204,7 @@ extend(Animator.prototype, {
 	},
 	checkAnimationRequired: function(anim) {
 		if (anim.required) {
+			console.log('Checking : ' + JSON.stringify(anim.required));
 			var required = anim.required;
 			for (var variable in required) {
 				if (!this.data.available(variable)) {

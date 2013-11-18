@@ -54,7 +54,7 @@ extend(Data.prototype, {
 				that.data = data;
 				that.emit('data', data);
 			});
-		},100);
+		},500);
 		this.variableInterval = setInterval(function() {
 			that.cache.get('variables', function(err, data) {
 				if (err) {
