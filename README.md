@@ -61,6 +61,7 @@ make -j2
 make install
 sudo mkdir /opt/nginx/sites-available
 sudo mkdir /opt/nginx/sites-enabled
+sudo mkdir /var/log/nginx
 ```
 
 Now we need to setup the config file for it, open the file `/opt/nginx/conf/nginx.conf` and replace its contents:
