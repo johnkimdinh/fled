@@ -5,9 +5,7 @@ FLED is designed to be run on a Beaglebone Black to drive a strip of WS2811 LEDs
 
 ### Beaglebone Black Setup
 
-1. Install Ubuntu on SD Card
-
-You can follow the guide here: http://shrkey.com/setting-up-beaglebone-black-to-boot-off-the-microsd-card/
+Install Ubuntu on SD Card. You can follow the guide here: http://shrkey.com/setting-up-beaglebone-black-to-boot-off-the-microsd-card/
 
 In short do this:
 ```bash
