@@ -29,6 +29,7 @@ Time to update and get some things installed:
 sudo apt-get update
 sudo apt-get install memcached
 sudo apt-get install git
+apt-get install libpcre3 libpcre3-dev
 ```
 
 Now for NodeJS:
