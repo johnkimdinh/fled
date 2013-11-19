@@ -51,9 +51,12 @@ wget 'https://github.com/agentzh/memc-nginx-module/archive/v0.13.tar.gz'
 tar -xzvf v0.13.tar.gz
 wget 'https://github.com/agentzh/echo-nginx-module/archive/v0.49.tar.gz'
 tar -xzvf v0.49.tar.gz
+wget 'https://github.com/agentzh/headers-more-nginx-module/archive/v0.23.tar.gz'
+tar -xzvf v0.23.tar.gz
 
 cd nginx-1.4.3
-./configure --prefix=/opt/nginx --add-module=../echo-nginx-module-0.49 --add-module=../memc-nginx-module-0.13
+./configure --prefix=/opt/nginx --add-module=../echo-nginx-module-0.49 --add-module=../memc-nginx-module-0.13 --add-module=../headers-more-nginx-module-0.23
+
 make -j2
 make install
 sudo mkdir /opt/nginx/sites-available
