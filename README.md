@@ -127,7 +127,7 @@ git clone https://github.com/SupplyFrame/fled.git
 
 cd fled
 
-sudo ln -s ./nginx.conf /opt/nginx/conf/sites-enabled/fled
+sudo ln -s ~/fled/nginx.conf /opt/nginx/conf/sites-enabled/fled
 
 sudo initctl restart nginx
 ```
