@@ -79,6 +79,8 @@ cd /lib/firmware
 echo BB-BONE-PRU > /sys/devices/bone_capemgr.9/slots
 ```
 
+If this didn't work with an error, its helpful to look at `dmesg` to see what went wrong.
+
 Now install node-pru and test it out using guide at [https://github.com/omcaree/node-pru]
 
 First install the driver:
