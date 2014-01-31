@@ -22,7 +22,13 @@ Editor.prototype = {
 			that.setAnim(data);
 		});
 		socket.on('anim-saved', function(data) {
-			that.setAnim(data);
+			var filename = $('#filename').text();
+			if (!filename) {
+				// first time saving, reload page with new filename edit
+				window.location = '/edit.html?anim=' + encodeURIComponent(data.filename);
+			} else {
+				that.setAnim(data);
+			}
 		});
 		var that = this;
 		socket.on('data', function(data) {
@@ -188,6 +194,14 @@ Editor.prototype = {
 		var animName = $('#animName').val();
 		var author = $('#author').val();
 		var filename = $('#filename').text();
+		// confirm before saving
+		if (filename) {
+			// we're overwriting and exist anim, confirm
+			var yesNo = confirm('You are about to overwrite this animation, are you sure you want to save?');
+			if (!yesNo) {
+				return;
+			}
+		}
 		var el = null;
 		if (!animName) {
 			el = $('#animName');
