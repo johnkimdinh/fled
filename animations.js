@@ -37,6 +37,9 @@ extend(Animations.prototype, {
 			data.filename = filename;
 			data.script = script;
 
+			if (!this.animsMap[filename]) {
+				this.anims.push(filename);
+			}
 			this.animsMap[filename] = data;
 			this.emit('change', this.animsMap);
 			return data;
