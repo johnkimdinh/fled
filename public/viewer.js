@@ -140,7 +140,7 @@ Viewer.prototype = {
 		var offsetY = Math.round((height / 8)/2);
 		var gapX = Math.round(width/12);
 		var gapY = Math.round(height/8);
-		var radius = (Math.round(width / 12)/2)*1.5;
+		var radius = (Math.round(width / 12)/2)*1;
 
 		if (this.ledObjects) {
 			for (var i=0; i < this.ledObjects.length; i++) {
@@ -232,7 +232,7 @@ Viewer.prototype = {
 				ledY = Math.floor(i/this.LED_COLS),
 				x = this.xOffset + (ledX*this.ledSize) +this.ledSize/2,
 				y = this.yOffset + (ledY*this.ledSize) +this.ledSize/2;
-			var gradient = ctx.createRadialGradient(x,y,0, x,y,this.ledSize);
+			var gradient = ctx.createRadialGradient(x,y,0, x,y,this.ledSize*0.85);
 
 			var col = this.leds[i];
 			var colString = "rgba(" + col.r + "," + col.g + "," + col.b + ",1)";

@@ -5,6 +5,7 @@
 
 var TWEEN = require('./tween'),
 	THREE = require('./public/three-math'),
+	Canvas = require('canvas'),
 	Color = THREE.Color;
 
 // Blend modes from http://www.venture-ware.com/kevin/coding/lets-learn-math-photoshop-blend-modes/
@@ -148,8 +149,6 @@ Display.prototype = {
 		var image = new Canvas.Image;
 		image.src = dataUri;
 
-	    canvas.width = image.width;
-	    canvas.height = image.height;
 
 		var canvas = new Canvas(image.width, image.height);
 		var context = canvas.getContext('2d');
