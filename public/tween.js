@@ -132,6 +132,7 @@ TWEEN.Tween = function ( object ) {
   };
   this.from = function( properties ) {
     _valuesStart = properties;
+    _valuesStartRepeat = properties;
   };
 
   this.start = function ( time ) {

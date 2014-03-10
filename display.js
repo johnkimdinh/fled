@@ -4,7 +4,8 @@
 // this object should provide the same interfaces as the display.js on the animation editor
 
 var TWEEN = require('./tween'),
-	Color = require('./color');
+	THREE = require('./public/three-math'),
+	Color = THREE.Color;
 
 // Blend modes from http://www.venture-ware.com/kevin/coding/lets-learn-math-photoshop-blend-modes/
 // many thanks to Kevin Jensen!
@@ -142,6 +143,23 @@ Display.prototype = {
 		TWEEN.update(time);
 	},
 
+	loadImage: function(dataUri) {
+
+		var image = new Canvas.Image;
+		image.src = dataUri;
+
+	    canvas.width = image.width;
+	    canvas.height = image.height;
+
+		var canvas = new Canvas(image.width, image.height);
+		var context = canvas.getContext('2d');
+
+	    context.drawImage(image, 0, 0);
+	    var raw = context.getImageData(
+	      0, 0, image.width, image.height
+	    );
+	    return { data: raw.data, height: image.height, width: image.width };
+	},
 	cleanAnimation: function() {
 		// prepare the display for the next animation
 

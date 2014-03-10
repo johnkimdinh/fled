@@ -1,6 +1,7 @@
 
 // Blend modes from http://www.venture-ware.com/kevin/coding/lets-learn-math-photoshop-blend-modes/
 // many thanks to Kevin Jensen!
+var Color = THREE.Color;
 var BlendModes = {
 	normal: function(top, bottom) {
 		return top;
@@ -131,6 +132,22 @@ Display.prototype = {
 		TWEEN.update(time);
 	},
 
+	loadImage: function(dataUri) {
+		var canvas = document.createElement('canvas');
+		var context = canvas.getContext('2d')
+
+		var image = new Image;
+		image.src = dataUri;
+
+	    canvas.width = image.width
+	    canvas.height = image.height
+	    context.drawImage(image, 0, 0)
+	    var raw = context.getImageData(
+	      0, 0, image.width, image.height
+	    );
+	    return { data: raw.data, height: image.height, width: image.width };
+	},
+
 	cleanAnimation: function() {
 		// prepare the display for the next animation
 
@@ -236,6 +253,6 @@ Display.prototype = {
 };
 
 // map some shortcuts to make life easier
-Display.Color = Color;
+Display.Color = THREE.Color;
 
 window.Display = Display;

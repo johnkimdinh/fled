@@ -11,7 +11,7 @@ var Display = require('./display'),
 	$ = require('jquery'),
 	events = require('events'),
 	util = require('util'),
-	Color = require('./color'),
+	THREE = require('./public/three-math'),
 	extend = require('extend');
 
 var Animator = function(ledBuffer, display, options) {
@@ -250,7 +250,8 @@ extend(Animator.prototype, {
 		
 		this.currentAnim = anim.script.runInNewContext({
 			Display: Display,
-			Color: Color,
+			Color: THREE.Color,
+			THREE: THREE,
 			TWEEN: TWEEN,
 			$: $,
 			console: console

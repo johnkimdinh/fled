@@ -30,6 +30,9 @@ sudo apt-get install git
 sudo apt-get install libpcre3 libpcre3-dev libssl-dev
 ```
 
+Now install the wifi:
+sudo apt-get install wireless-tools
+
 Now for NodeJS:
 
 ```bash
@@ -87,6 +90,7 @@ http {
 }
 ```
 
+### Upstart
 Next up we want Nginx to start on boot so lets setup upstart, create a file `/etc/init/nginx.conf`:
 
 ```bash
@@ -122,6 +126,8 @@ Now we can start Nginx for the first time:
 sudo initctl start nginx
 ```
 
+### Installing FLED
+
 Now lets install FLED itself:
 ```bash
 cd ~
@@ -139,5 +145,8 @@ Finally we want FLED to be started on boot as well, so lets use PM2 for this:
 ```bash
 sudo npm install --global pm2
 
-pm2 start app.js
+mkdir ~/fled/logs
+mkdir ~/.pm2/pids
+pm2 start app.js -e ~/fled/logs/error.log -o ~/fled/logs/app.log
+pm2 dump
 ```
