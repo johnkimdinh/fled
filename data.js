@@ -49,7 +49,11 @@ extend(Data.prototype, {
 				}
 				// turn back into JSON objects
 				for (var key in data) {
+					try {
 					data[key] = JSON.parse(data[key]);
+					} catch (ex) {
+						console.log('Tried to parse :' + JSON.stringify(data[key]) + ' as JSON and failed.');	
+					}
 				}
 				that.data = data;
 				that.emit('data', data);

@@ -34,7 +34,7 @@ Editor.prototype = {
 		socket.on('data', function(data) {
 			// update UI
 			for (var variable in data) {
-				$('#variable_' + variable).find('.json-data').text(JSON.stringify(data, undefined, 2));
+				$('#variable_' + variable).find('.json-data').text(JSON.stringify(data[variable], undefined, 2));
 			}
 			that.data = data;
 		});
@@ -75,7 +75,9 @@ Editor.prototype = {
 			$('#animName').val(this.anim.name);
 			$('#author').val(this.anim.author);
 			$('#filename').text(this.anim.filename);
-			this.editor.setValue(this.anim.code);
+			if (this.anim.code) {
+				this.editor.setValue(this.anim.code);
+			}
 		}
 	},
 	subscribeVariables: function() {
