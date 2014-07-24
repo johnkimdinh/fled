@@ -132,7 +132,9 @@ extend(Controller.prototype, {
 					fs.writeFile(filename, JSON.stringify(data), function(err) {
 						socket.emit('anim-saved', anim);
 						// update animations class
-						that.animator.next(anim);
+						if (data.publish) {
+							that.animator.next(anim);
+						}
 					});
 				} else {
 					socket.emit('anim-error','Invalid javascript!');

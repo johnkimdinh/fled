@@ -4,10 +4,20 @@ var RandomSelector = function(anims) {
 };
 
 RandomSelector.prototype = {
-	select: function() {
+	select: function(retries) {
+		if (retries===undefined) {
+			retries = 0;
+		}
 		var anims = this.anims.list();
 		var index = Math.round(Math.random()*(anims.length-1));
-		return this.anims.get(anims[index]);
+		var anim = this.anims.get(anims[index]);
+		if (anim.publish) {
+			return anim;
+		} else if (retries > 10) {
+			return anim; // show it anyway
+		}
+		// try again....
+		return this.select(++retries);
 	}
 };
 

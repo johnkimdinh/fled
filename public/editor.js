@@ -196,6 +196,7 @@ Editor.prototype = {
 		var animName = $('#animName').val();
 		var author = $('#author').val();
 		var filename = $('#filename').text();
+		var publish = $('#publish').is(":checked");
 		// confirm before saving
 		if (filename) {
 			// we're overwriting and exist anim, confirm
@@ -219,7 +220,7 @@ Editor.prototype = {
 			el.animate({'backgroundColor': '#FFFFFF'},2000);
 			return;
 		}
-		this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: this.anim.required, code: this.editor.getValue()});
+		this.socket.emit('save-anim', {name: animName, filename: filename, author: author, required: this.anim.required, code: this.editor.getValue(), publish: publish});
 	},
 	init: function() {
 		this.anim = {name: '', author: '', required: {}};

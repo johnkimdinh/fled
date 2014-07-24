@@ -66,6 +66,18 @@
 			#variableAccordion form .checkbox {
 				
 			}
+			.publish {
+				margin-top: 10px;
+			}
+			.publish label {
+				display: inline-block;
+				margin-left: 4px;
+			}
+			.publish input {
+				position: relative;
+				top: 2px;
+			}
+
 	</style>
 </head>
 <body>
@@ -143,6 +155,9 @@ return {
 			<div class="col-md-4 canvas-container">
 				<canvas id="canvas"></canvas>
 				<button id="preview" type="button" class="btn btn-default">Preview</button>
+
+				<div class="publish"><input type="checkbox" name="publish" id="publish"/> <label for="publish">Publish?</label></div>
+
 				<h4>Documentation?</h4>
 				<a href='http://threejs.org/docs/#Reference/Math/Color'>Color</a>
 				<a href='https://github.com/sole/tween.js/'>TweenJS</a>

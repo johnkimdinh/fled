@@ -44,7 +44,7 @@ extend(Data.prototype, {
 			}
 			that.cache.getMulti(variables, function(err, data) {
 				if (err) {
-					console.log('Error retrieving variables from memcache : ' + err);
+					//console.log('Error retrieving variables from memcache : ' + err);
 					return;
 				}
 				// turn back into JSON objects
@@ -62,7 +62,7 @@ extend(Data.prototype, {
 		this.variableInterval = setInterval(function() {
 			that.cache.get('variables', function(err, data) {
 				if (err) {
-					console.log('Error retrieving variables list from memcache : ' + err);
+					//console.log('Error retrieving variables list from memcache : ' + err);
 					return;
 				}
 				var isChanged = data.length != that.variables.length;
