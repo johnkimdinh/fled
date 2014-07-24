@@ -75,6 +75,7 @@ Editor.prototype = {
 			$('#animName').val(this.anim.name);
 			$('#author').val(this.anim.author);
 			$('#filename').text(this.anim.filename);
+			$('#publish').attr('checked', this.anim.publish ? 'checked' : null);
 			if (this.anim.code) {
 				this.editor.setValue(this.anim.code);
 			}

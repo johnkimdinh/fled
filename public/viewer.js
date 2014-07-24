@@ -86,6 +86,9 @@ Viewer.prototype = {
 			var anim = animations[filename];
 			var item = template.clone().append('<span>' + anim.name + '</span>');
 			item.data('anim', anim);
+			if (anim.publish) {
+				item.addClass('published');
+			}
 			list.append(item);	
 		}
 	},
