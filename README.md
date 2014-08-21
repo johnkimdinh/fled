@@ -128,6 +128,12 @@ sudo initctl start nginx
 
 ### Installing FLED
 
+First we need to install Cairo so we can use node-canvas for image loading.
+
+```bash
+sudo apt-get install libcairo2-dev libjpeg8-dev libpango1.0-dev libgif-dev build-essential g++
+```
+
 Now lets install FLED itself:
 ```bash
 cd ~
