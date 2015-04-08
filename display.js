@@ -159,6 +159,28 @@ Display.prototype = {
 	    );
 	    return { data: raw.data, height: image.height, width: image.width };
 	},
+
+	drawImage: function(image, x, y, buffer, width, height) {
+		if (!buffer) {
+			buffer = this.leds;
+			width = this.cols;
+			height = this.rows;
+		}
+
+		// draw the image data into the buffer at specified position
+		for (var imageX = 0; imageX < image.width; imageX++) {
+			for (var imageY = 0; imageY < image.height; imageY++) {
+				var tmpX = x+imageX, tmpY = y+imageY;
+				if (tmpX >= width || tmpY >= height ||
+					tmpX < 0 || tmpY < 0) {
+					continue;
+				}
+				var index = tmpX + tmpY * width;
+				var imageIndex = (imageX*4) + ((image.height - imageY)*image.width*4);
+				buffer[index].setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
+			}
+		}
+	},
 	cleanAnimation: function() {
 		// prepare the display for the next animation
 
