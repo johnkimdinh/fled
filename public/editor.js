@@ -103,8 +103,7 @@ Editor.prototype = {
 	initDisplay: function() {
 		var display = new Display();
 		this.display = display;
-		this.viewer = new Viewer();
-		this.viewer.initDisplay(display.config);
+		this.view = new Renderer('canvas');
 	},
 	addListeners: function() {
 		var that = this;
@@ -187,7 +186,7 @@ Editor.prototype = {
 				ledBuffer[index+2] = Math.round(led.b*255);
 			}
 
-			that.viewer.update(ledBuffer);
+			that.view.updatePixels(ledBuffer);
 
 		},Math.floor(1000/30));
 

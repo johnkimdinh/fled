@@ -20,6 +20,9 @@ extend(Controller.prototype, {
 
 		app.use(express.bodyParser());
 
+		app.use(express.static('public'));
+		app.use('/public', express.static('public'));
+
 		this.data = new Data();
 
 		app.get('/data/register', function (req, res) {

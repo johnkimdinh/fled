@@ -3,6 +3,8 @@
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/public/jquery-1.10.0.min.js"></script>
 	<script src="/public/jquery.color.js"></script>
+	<script src="/public/pixi.js"></script>
+	<script src="/public/renderer.js"></script>
 	<script src="/public/viewer.js"></script>
 	<script src="/public/tween.js"></script>
 	<script src="/public/three-math.js"></script>
@@ -153,7 +155,7 @@ return {
 				</div>
 			</div>
 			<div class="col-md-4 canvas-container">
-				<canvas id="canvas"></canvas>
+				<section id="canvas"></section>
 				<button id="preview" type="button" class="btn btn-default">Preview</button>
 
 				<div class="publish"><input type="checkbox" name="publish" id="publish"/> <label for="publish">Publish?</label></div>

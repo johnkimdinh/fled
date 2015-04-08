@@ -3,7 +3,7 @@
 // spin up socket.io to serve other applications and talk to editor for live preview
 // create animator for running animation code and updating LED values
 
-var Arduino = require('./arduino'),
+var GoFLED = require('./gofled'),
 	Controller = require('./controller'),
 	Animator = require('./animator'),
 	Animations = require('./animations'),
@@ -15,7 +15,7 @@ var Arduino = require('./arduino'),
 	animator = null,
 	anims = null,
 	controller = null,
-	arduino = null,
+	gofled = null,
 	playlist = null;
 
 // lets create the display object
@@ -32,7 +32,7 @@ for (var i=0; i < display.MAX_LEDS * 3; i++) {
 animator = new Animator(buffer,display);
 anims = new Animations();
 playlist = new Playlist(new RandomSelector(anims));
-arduino = new Arduino({ledCount:display.MAX_LEDS,animator:animator});
+gofled = new GoFLED({ledCount:display.MAX_LEDS,animator:animator});
 
 // setup controller to orchestrate everything
 controller = new Controller({
@@ -46,7 +46,7 @@ function nextFrame() {
 
 	animator.update(controller.data);
 
-	arduino.send(buffer);
+	gofled.send(buffer);
 	
 //	setImmediate(nextFrame);
 }

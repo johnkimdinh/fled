@@ -92,8 +92,8 @@ BlendModes.add = BlendModes.linearDodge;
 var Display = function() {
 
 	var config = {
-		"rows": 8,
-		"cols": 12
+		"rows": 34,
+		"cols": 52
 	};
 
 	this.config = config;
