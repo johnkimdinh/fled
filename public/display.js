@@ -235,6 +235,13 @@ Display.prototype = {
 			var ledIndex = leds[i],
 				led = this.leds[ledIndex];
 			//this.leds[ledIndex] = color.clone();
+			if (led.r===undefined) {
+				// not a proper color object, best set it to black
+				led = new Color(0);
+			}
+			if (color.r===undefined) {
+				color = new Color(0);
+			}
 			this.leds[ledIndex] = this._setColorBlend(led, color, blendMode);
 		}
 	},
