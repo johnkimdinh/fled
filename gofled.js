@@ -16,7 +16,7 @@ GoFLED.prototype = {
 		// create connection to gofled port
 		that.client = null;
 
-		var client = net.connect({host:"localhost", port:9001}, function() {
+		var client = net.connect({host:"fled.vpc.supplyframe.com", port:9001}, function() {
 			// client connected!
 			console.log("Connected to GoFLED");
 			that.client = client;
