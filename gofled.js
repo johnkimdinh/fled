@@ -16,10 +16,21 @@ GoFLED.prototype = {
 		// create connection to gofled port
 		that.client = null;
 
-		var client = net.connect({host:"fled.vpc.supplyframe.com", port:9001}, function() {
+		var client = net.connect({host:"localhost", port:9001}, function() {
 			// client connected!
 			console.log("Connected to GoFLED");
 			that.client = client;
+
+			// send meta message
+			var meta = {
+				"name": "fled-js",
+				"fps":30,
+				"author": "Various",
+				"active": true
+			};
+
+			var metaBuffer = new Buffer(JSON.stringify(meta));
+			that.sendMessage(5, metaBuffer);
 		});
 
 		client.on('end', function() {
