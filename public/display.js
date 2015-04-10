@@ -164,7 +164,7 @@ Display.prototype = {
 					continue;
 				}
 				var index = tmpX + tmpY * width;
-				var imageIndex = (imageX*4) + ((image.height - imageY)*image.width*4);
+				var imageIndex = (imageX*4) + ((imageY)*image.width*4);
 				buffer[index].setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
 			}
 		}
