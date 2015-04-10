@@ -160,7 +160,7 @@ Display.prototype = {
 	    return { data: raw.data, height: image.height, width: image.width };
 	},
 
-	drawImage: function(image, x, y, buffer, width, height) {
+	drawImage: function(image, x, y, mask, buffer, width, height) {
 		if (!buffer) {
 			buffer = this.leds;
 			width = this.cols;
@@ -177,9 +177,70 @@ Display.prototype = {
 				}
 				var index = tmpX + tmpY * width;
 				var imageIndex = (imageX*4) + ((imageY)*image.width*4);
+
 				buffer[index].setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
 			}
 		}
+	},
+
+	drawImageRegion: function(image, x, y, regionX, regionY, regionWidth, regionHeight, mask, buffer, width, height) {
+
+		if (!buffer) {
+			buffer = this.leds;
+			width = this.cols;
+			height = this.rows;
+		}
+
+		for (var imageX = regionX; imageX < image.width && imageX < regionX+regionWidth; imageX++) {
+			for (var imageY = regionY; imageY < image.height && imageY < regionY+regionHeight; imageY++) {
+
+				var tmpX = x+(imageX-regionX), tmpY = y+(imageY-regionY);
+				if (tmpX >= width || tmpY >= height ||
+					tmpX < 0 || tmpY < 0) {
+					continue;
+				}
+
+				var index = tmpX + (tmpY) * width;
+				var imageIndex = ((imageX)*4) + ((imageY)*image.width*4);
+				var c = new Color();
+				c.setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
+
+				if (mask && c.equals(mask)) {
+					continue;
+				}
+
+				buffer[index] = c;
+			}
+		}
+	},
+
+	drawImageRegionMap: function(image, x, y, regionIndex, regionMap, mask, buffer, width, height) {
+		var regionX, regionY, regionWidth, regionHeight;
+
+		// lookup index in array or key in map
+		regionEntry = regionMap[regionIndex];
+
+		regionX = regionEntry.x;
+		regionY = regionEntry.y;
+		regionWidth = regionEntry.width;
+		regionHeight = regionEntry.height;
+
+		this.drawImageRegion(image,x,y,regionX,regionY,regionWidth,regionheight,mask,buffer,width,height);
+	},
+
+	drawImageTile: function(image, x,y, tileX, tileY, tileMap, mask, buffer, width, height) {
+		// tilemap has width and height of each tile, an offset for all tiles globally, and then we just compute the values on the fly
+		// this only works for regular tilesets, but is useful for fonts
+		var regionX = tileMap.offsetX || 0,
+			regionY = tileMap.offsetY || 0,
+			regionWidth = tileMap.tileWidth,
+			regionHeight = tileMap.tileHeight,
+			tileBorder = tileMap.tileBorder || 0;
+
+		regionX += tileX * (tileMap.tileWidth+tileBorder);
+		regionY += tileY * (tileMap.tileHeight+tileBorder);
+
+		this.drawImageRegion(image,x,y,regionX,regionY,regionWidth,regionHeight,mask,buffer,width,height);
 	},
 	cleanAnimation: function() {
 		// prepare the display for the next animation
