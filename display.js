@@ -160,6 +160,58 @@ Display.prototype = {
 	    return { data: raw.data, height: image.height, width: image.width };
 	},
 
+	isMasked: function(c, colors) {
+		if (colors && colors.mask) {
+			for (var i=0; i < colors.mask.length; i++) {
+				if (colors.mask[i].equals(c)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+
+	replaceColor: function(c, colors) {
+		if (colors && colors.replace) {
+			for (var i=0; i < colors.replace.length; i++) {
+				var replacePair = colors.replace[i];
+				if (Array.isArray(replacePair) && replacePair.length >= 2) {
+					if (replacePair[0].equals(c)) {
+						return new Color().set(replacePair[1]);
+					}
+
+				}
+			}	
+		}
+		return c;
+	},
+
+	preprocessMask: function(mask) {
+		if (!mask) {
+			return null;
+		}
+		// if its just a single color then its a simple straight mask
+		if (mask instanceof Color) {
+			mask = {
+				mask: [mask],
+				replace: null
+			};
+		}
+		// if its got a mask, but only one color make into an array
+		if (mask.mask instanceof Color) {
+			mask.mask = [mask.mask];
+		}
+		if (Array.isArray(mask.replace) && mask.replace.length > 0) {
+			if ( mask.replace[0] instanceof Color ) {
+				// its not an array of arrays, so make it so
+				mask.replace = [
+					mask.replace
+				];
+			}
+		}
+		return mask;
+	},
+
 	drawImage: function(image, x, y, mask, buffer, width, height) {
 		if (!buffer) {
 			buffer = this.leds;
@@ -167,23 +219,28 @@ Display.prototype = {
 			height = this.rows;
 		}
 
+		mask = this.preprocessMask(mask);
+
 		// draw the image data into the buffer at specified position
 		for (var imageX = 0; imageX < image.width; imageX++) {
 			for (var imageY = 0; imageY < image.height; imageY++) {
+
 				var tmpX = x+imageX, tmpY = y+imageY;
 				if (tmpX >= width || tmpY >= height ||
 					tmpX < 0 || tmpY < 0) {
 					continue;
 				}
+
 				var index = tmpX + tmpY * width;
 				var imageIndex = (imageX*4) + ((imageY)*image.width*4);
 
 				var c = new Color();
 				c.setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
 
-				if (mask && c.equals(mask)) {
+				if (this.isMasked(c, mask)) {
 					continue;
 				}
+				c = this.replaceColor(c, mask);
 
 				buffer[index] = c;
 			}
@@ -198,6 +255,8 @@ Display.prototype = {
 			height = this.rows;
 		}
 
+		mask = this.preprocessMask(mask);
+
 		for (var imageX = regionX; imageX < image.width && imageX < regionX+regionWidth; imageX++) {
 			for (var imageY = regionY; imageY < image.height && imageY < regionY+regionHeight; imageY++) {
 
@@ -209,18 +268,20 @@ Display.prototype = {
 
 				var index = tmpX + (tmpY) * width;
 				var imageIndex = ((imageX)*4) + ((imageY)*image.width*4);
+
 				var c = new Color();
 				c.setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
 
-				if (mask && c.equals(mask)) {
+				if (this.isMasked(c, mask)) {
 					continue;
 				}
+
+				c = this.replaceColor(c, mask);
 
 				buffer[index] = c;
 			}
 		}
 	},
-
 	drawImageRegionMap: function(image, x, y, regionIndex, regionMap, mask, buffer, width, height) {
 		var regionX, regionY, regionWidth, regionHeight;
 
