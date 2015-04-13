@@ -5,6 +5,8 @@ var GoFLED = function(options) {
 	this.init(options);
 };
 
+var gofledHost = process.env.GOFLED_HOST || "fled.vpc.supplyframe.com";
+
 GoFLED.prototype = {
 	setConnectTimeout: function() {
 		if (this.connectTimeout) {
@@ -21,7 +23,7 @@ GoFLED.prototype = {
 		that.client = null;
 
 		console.log("Attempting connection...");
-		var client = net.connect({host:"fled.vpc.supplyframe.com", port:9001}, function() {
+		var client = net.connect({host:gofledHost, port:9001}, function() {
 			// client connected!
 			console.log("Connected to GoFLED");
 			that.client = client;
