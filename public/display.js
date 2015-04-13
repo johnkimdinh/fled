@@ -152,6 +152,108 @@ Display.prototype = {
 	loadFont: function(name, dataUri, tileMap, maskColor, textColor) {
 		this.fonts[name] = { image: this.loadImage(dataUri), map: tileMap, mask: maskColor, text: textColor };
 	},
+
+	drawLine: function(x0,y0, x1, y1, color) {
+	    var steep = Math.abs(y1 - y0) > Math.abs(x1 - x0),
+	        tmp;
+	    if (steep) {
+	        tmp = x0;
+	        x0 = y0;
+	        y0 = tmp;
+	        tmp = x1;
+	        x1 = y1;
+	        y1 = tmp;
+	    }
+	    if (x0 > x1) {
+	        tmp = x0;
+	        x0 = x1;
+	        x1 = tmp;
+	        tmp = y0;
+	        y0 = y1;
+	        y1 = tmp;
+	    }
+
+	    var display = this;
+
+		var plot = function(x, y, c, color) {
+			var index = x + (y*display.cols);
+		    if (index > display.leds.length || index < 0) {
+		        return;
+		    }
+		    //plot the pixel at (x, y) with brightness c (where 0 ≤ c ≤ 1)
+		    var hsl = color.getHSL();
+		    hsl.l = c*0.5;
+		    var col = new Color();
+		    col.setHSL(hsl.h, hsl.s, hsl.l);
+		    
+		    display.setColor(index, col, 'add');
+		};
+
+		var ipart = function(x) {
+		    return ~~x;
+		};
+	 
+		var round = function(x) {
+		    return ipart(x + 0.5);
+		};
+	 
+		var fpart = function(x) {
+		    return x%1;
+		};
+		 
+		var rfpart = function(x) {
+		    return 1 - fpart(x);
+		};
+
+	    var dx = x1 - x0,
+	        dy = y1 - y0;
+	        
+	    var gradient = dy/dx;
+	    
+	    var xend = Math.round(x0),
+	        yend = y0 + gradient * (xend - x0),
+	        xgap = rfpart(x0 + 0.5),
+	        xpxl1 = xend,   //this will be used in the main loop
+	        ypxl1 = ipart(yend);
+	        
+	     if (steep) {
+	         plot(ypxl1,   xpxl1, rfpart(yend) * xgap, color);
+	         plot(ypxl1+1, xpxl1,  fpart(yend) * xgap, color);
+	     } else {
+	         plot(xpxl1, ypxl1  , rfpart(yend) * xgap, color);
+	         plot(xpxl1, ypxl1+1,  fpart(yend) * xgap, color);
+	     }
+	     
+	     var intery = yend + gradient; // first y-intersection for the main loop
+	 
+	     // handle second endpoint
+	     xend = Math.round(x1);
+	     yend = y1 + gradient * (xend - x1);
+	     xgap = fpart(x1 + 0.5);
+	     var xpxl2 = xend, //this will be used in the main loop
+	        ypxl2 = ipart(yend);
+	        
+	     if (steep) {
+	         plot(ypxl2  , xpxl2, rfpart(yend) * xgap, color);
+	         plot(ypxl2+1, xpxl2,  fpart(yend) * xgap, color);
+	     } else {
+	         plot(xpxl2, ypxl2,  rfpart(yend) * xgap, color);
+	         plot(xpxl2, ypxl2+1, fpart(yend) * xgap, color);
+	     }
+	 
+	     // main loop
+	 
+	     for (var x = xpxl1 + 1; x <= xpxl2 - 1; x++) {
+	         if (steep) {
+	             plot(ipart(intery)  , x, rfpart(intery), color);
+	             plot(ipart(intery)+1, x,  fpart(intery), color);
+	         } else {
+	             plot(x, ipart (intery),  rfpart(intery), color);
+	             plot(x, ipart (intery)+1, fpart(intery), color);
+	         }
+	         intery = intery + gradient;
+	     }
+	},
 	
 	drawString: function (str,x,y,colors,fontName) {
 		if (!fontName) {
@@ -433,6 +535,10 @@ Display.prototype = {
 			var ledIndex = leds[i],
 				led = this.leds[ledIndex];
 			//this.leds[ledIndex] = color.clone();
+			if (!led) {
+				this.leds[ledIndex] = new Color(0);
+				continue;
+			}
 			if (led.r===undefined) {
 				// not a proper color object, best set it to black
 				led = new Color(0);
