@@ -7,15 +7,20 @@ var GoFLED = function(options) {
 
 GoFLED.prototype = {
 	setConnectTimeout: function() {
-		if (!this.connectTimeout) {
-			this.connectTimeout = setTimeout(this.connect.bind(this), 1000);
+		if (this.connectTimeout) {
+			clearTimeout(this.connectTimeout);
+			this.connectTimeout = null;
 		}
+		
+		this.connectTimeout = setTimeout(this.connect.bind(this), 3000);
 	},
 	connect: function() {
+		this.connectTimeout = null;
 		var that = this;
 		// create connection to gofled port
 		that.client = null;
 
+		console.log("Attempting connection...");
 		var client = net.connect({host:"fled.vpc.supplyframe.com", port:9001}, function() {
 			// client connected!
 			console.log("Connected to GoFLED");
