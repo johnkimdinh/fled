@@ -291,7 +291,11 @@ extend(Animator.prototype, {
 			duration = 0;
 
 		min = Math.min(min, max);
-		duration = Math.round((min + (Math.random() * (max-min))) * 1000) + transition.duration;
+		if (this.currentAnim.AnimDuration) {
+			duration = this.currentAnim.AnimDuration;
+		} else {
+			duration = Math.round((min + (Math.random() * (max-min))) * 1000) + transition.duration;
+		}
 
 		console.log('info: running animation : ' + anim.name + ' for ' + duration + 'ms');
 		var that = this;
