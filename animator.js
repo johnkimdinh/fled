@@ -248,14 +248,26 @@ extend(Animator.prototype, {
 			this.unsubscribeVariables(this.anim);
 		}
 		
-		this.currentAnim = anim.script.runInNewContext({
-			Display: Display,
-			Color: THREE.Color,
-			THREE: THREE,
-			TWEEN: TWEEN,
-			$: $,
-			console: console
-		})(); // execute the script to get the anim module all setup
+		try {
+			this.currentAnim = anim.script.runInNewContext({
+				Display: Display,
+				Color: THREE.Color,
+				THREE: THREE,
+				TWEEN: TWEEN,
+				$: $,
+				console: console,
+				setTimeout: setTimeout,
+				setInterval: setInterval,
+				clearTimeout: clearTimeout,
+				clearInterval: clearInterval
+			})(); // execute the script to get the anim module all setup
+		} catch (e) {
+			console.log("Animation failed to parse properly : " + e.message);
+			console.log("Trace : " + e.stack);
+			this.emit('animation-finished',this);
+			return;
+		}
+
 		this.anim = anim;
 		this.subscribeVariables(anim);
 

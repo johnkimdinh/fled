@@ -142,7 +142,12 @@ Display.prototype = {
 		return this.playing;
 	},
 	update: function(time) {
-		TWEEN.update(time);
+		try {
+			TWEEN.update(time);
+		} catch (e) {
+			console.log("Failed to update tweens : " + e.message);
+			console.log("Trace : " + e.stack);
+		}
 	},
 
 	defaultFont: 'data:image/png;base64,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',
@@ -380,6 +385,12 @@ Display.prototype = {
 		return mask;
 	},
 
+	getImagePixel: function(image, x,y) {
+		var imageIndex = (x*4) + ((y)*image.width*4);
+		var c = new Color();
+				c.setRGB(image.data[imageIndex]/255,image.data[imageIndex+1]/255,image.data[imageIndex+2]/255);
+		return c;
+	},
 	drawImage: function(image, x, y, mask, buffer, width, height) {
 		if (!buffer) {
 			buffer = this.leds;
@@ -542,6 +553,10 @@ Display.prototype = {
 			// look up array index in leds
 			var ledIndex = leds[i],
 				led = this.leds[ledIndex];
+			if (!led) {
+				this.leds[ledIndex] = new Color(0);
+				continue;
+			}
 			//this.leds[ledIndex] = color.clone();
 			if (led.r===undefined) {
 				// not a proper color object, best set it to black
