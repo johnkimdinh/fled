@@ -115,6 +115,7 @@ var Display = function() {
 	}
 
 	this.loadFonts();
+	this.initPalettes();
 
 	this.reset();
 };
@@ -170,6 +171,171 @@ Display.prototype = {
 		this.fonts[name] = { image: this.loadImage(dataUri), map: tileMap, mask: maskColor, text: textColor };
 	},
 	
+	// palettes
+	palettes: {},
+	initPalettes: function() {
+		this.palettes = {};
+		this.createPalette('rainbow', [
+			0xFF0000, 0xD52A00, 0xAB5500, 0xAB7F00,
+    		0xABAB00, 0x56D500, 0x00FF00, 0x00D52A,
+    		0x00AB55, 0x0056AA, 0x0000FF, 0x2A00D5,
+    		0x5500AB, 0x7F0081, 0xAB0055, 0xD5002B
+    	]);
+		this.createPalette('rainbow-striped', [
+		    0xFF0000, 0x000000, 0xAB5500, 0x000000,
+		    0xABAB00, 0x000000, 0x00FF00, 0x000000,
+		    0x00AB55, 0x000000, 0x0000FF, 0x000000,
+		    0x5500AB, 0x000000, 0xAB0055, 0x000000
+		]);
+		this.createPalette('heat', [
+		    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
+		    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
+		    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF
+    	]);
+    	this.createPalette('party' [
+    		0x5500AB, 0x84007C, 0xB5004B, 0xE5001B,
+		    0xE81700, 0xB84700, 0xAB7700, 0xABAB00,
+		    0xAB5500, 0xDD2200, 0xF2000E, 0xC2003E,
+		    0x8F0071, 0x5F00A1, 0x2F00D0, 0x0007F9
+	    ]);
+
+	},
+	createPalette: function(name, colors) {
+		// confirm color values are colors
+		if (!Array.isArray(colors)) {
+			return false;
+		}
+
+		for (var i=0; i < colors.length; i++) {
+			var c = colors[i];
+			if (typeof c === "number") {
+				c = new Color(c);
+			}
+			colors[i] = c;
+		}
+
+		this.palettes[name] = colors;
+	},
+	
+	randomizePalettes: function() {
+		this.createPalette('random1', [
+            new Color().setHSL(Math.random(), 1, 0.25),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 0.5, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5)
+        ]);
+        this.createPalette('random2', [
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            new Color().setHSL(Math.random(), Math.random(), 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), Math.random(), 0.5),
+            
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0)
+        ]);
+        this.createPalette('random3', [
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0),
+            
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 0, 0),
+            new Color().setHSL(Math.random(), 0, 0)
+        ]);
+        this.createPalette('random4', [
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), Math.random(), Math.random()*0.5),
+            
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5),
+            
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, 0),
+            new Color().setHSL(Math.random(), 1, 0.5),
+            new Color().setHSL(Math.random(), 1, Math.random()*0.5)
+        ]);
+	},
+	getRandomPalette: function() {
+		var result;
+	    var count = 0;
+	    for (var name in this.palettes) {
+	        if (Math.random() < 1/++count) {
+	           result = name;
+	        }
+	    }
+	    return result;
+	},
+	getPaletteColor: function(name, value, interpolate) {
+		if (!this.palettes[name]) {
+			return this.getPaletteColor('rainbow', value);
+		}
+
+		var palette = this.palettes[name];
+		// clamp value to 0-1 range with wraparound
+		if (value < 0) {
+			value = 0;
+		}
+		value = value % 1;
+		// scale value to number of indices and round to closest
+		var scaledValue = (palette.length) * value;
+
+		var closestIndex = Math.round(scaledValue);
+		if (closestIndex >= palette.length) {
+			closestIndex = 0;
+		}
+
+		if (!interpolate) {
+			return palette[closestIndex].clone();
+		}
+
+		// for interpolate get lower and upper colors
+		var lowerIndex = Math.floor(scaledValue),
+			upperIndex = Math.ceil(scaledValue),
+			alpha = (scaledValue - lowerIndex);
+
+		if (upperIndex >= palette.length) {
+			upperIndex = 0;
+		}
+
+		var lowerColor = palette[lowerIndex],
+			upperColor = palette[upperIndex];
+
+		return lowerColor.clone().lerp(upperColor, alpha);
+	},
+
 	drawLine: function(x0,y0, x1, y1, color) {
 	    var steep = Math.abs(y1 - y0) > Math.abs(x1 - x0),
 	        tmp;
@@ -326,11 +492,15 @@ Display.prototype = {
 		var canvas = new Canvas(image.width, image.height);
 		var context = canvas.getContext('2d');
 
-	    context.drawImage(image, 0, 0);
-	    var raw = context.getImageData(
-	      0, 0, image.width, image.height
-	    );
-	    return { data: raw.data, height: image.height, width: image.width };
+		try {
+		    context.drawImage(image, 0, 0);
+		    var raw = context.getImageData(
+		      0, 0, image.width, image.height
+		    );
+		    return { data: raw.data, height: image.height, width: image.width };
+		} catch (e) {
+			return { data: [], height: 0, width: 0 };
+		}
 	},
 
 	isMasked: function(c, colors) {
