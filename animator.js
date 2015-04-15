@@ -22,7 +22,7 @@ var Animator = function(ledBuffer, display, options) {
 		},
 		animation: {
 			durationMin: 30,
-			durationMax: 30
+			durationMax: 60
 		},
 		hslOffset: {
 			h: 0,
